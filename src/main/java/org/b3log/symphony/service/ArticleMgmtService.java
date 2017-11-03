@@ -42,6 +42,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -52,7 +55,7 @@ import java.util.*;
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
  * @author <a href="http://zephyr.b3log.org">Zephyr</a>
- * @version 2.17.36.45, Aug 30, 2017
+ * @version 2.17.36.47, Nov 2, 2017
  * @since 0.2.0
  */
 @Service
@@ -285,7 +288,12 @@ public class ArticleMgmtService {
         final String articleId = article.optString(Keys.OBJECT_ID);
         String previewContent = article.optString(Article.ARTICLE_CONTENT);
         previewContent = Markdowns.toHTML(previewContent);
-        previewContent = Emotions.clear(Jsoup.parse(previewContent).text());
+        final Document doc = Jsoup.parse(previewContent);
+        final Elements elements = doc.select("a, img, iframe, object, video");
+        for (final Element element : elements) {
+            element.remove();
+        }
+        previewContent = Emotions.clear(doc.text());
         previewContent = StringUtils.substring(previewContent, 0, 512);
         final String contentToTTS = previewContent;
 
@@ -566,7 +574,6 @@ public class ArticleMgmtService {
 
             final String clientArticleId = requestJSONObject.optString(Article.ARTICLE_CLIENT_ARTICLE_ID, ret);
             final String clientArticlePermalink = requestJSONObject.optString(Article.ARTICLE_CLIENT_ARTICLE_PERMALINK);
-            final boolean isBroadcast = requestJSONObject.optBoolean(Article.ARTICLE_T_IS_BROADCAST);
 
             article.put(Article.ARTICLE_TITLE, articleTitle);
             article.put(Article.ARTICLE_TAGS, requestJSONObject.optString(Article.ARTICLE_TAGS));
@@ -595,11 +602,7 @@ public class ArticleMgmtService {
             article.put(Article.ARTICLE_LATEST_CMT_TIME, 0);
             article.put(Article.ARTICLE_LATEST_CMTER_NAME, "");
             article.put(Article.ARTICLE_PERMALINK, "/article/" + ret);
-            if (isBroadcast) {
-                article.put(Article.ARTICLE_CLIENT_ARTICLE_ID, "aBroadcast");
-            } else {
-                article.put(Article.ARTICLE_CLIENT_ARTICLE_ID, clientArticleId);
-            }
+            article.put(Article.ARTICLE_CLIENT_ARTICLE_ID, clientArticleId);
             article.put(Article.ARTICLE_CLIENT_ARTICLE_PERMALINK, clientArticlePermalink);
             article.put(Article.ARTICLE_RANDOM_DOUBLE, Math.random());
             article.put(Article.REDDIT_SCORE, 0);
