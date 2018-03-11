@@ -23,25 +23,16 @@
                             <svg><use xlink:href="#weibo"></use></svg></a>   &nbsp;
                         <a target="_blank" class="tooltipped tooltipped-n" aria-label="${joinQQGroupLabel}"
                            href="http://shang.qq.com/wpa/qunwpa?idkey=981d9282616274abb1752336e21b8036828f715a1c4d0628adcf208f2fd54f3a">
-                            <svg><use xlink:href="#qq"></use></svg></a>
+                            <svg><use xlink:href="#qq"></use></svg></a> &nbsp;
+                        <a target="_blank" rel="noopener"
+                           href="https://t.me/b3log">
+                            <svg class="icon-telegram"><use xlink:href="#icon-telegram"></use></svg></a>
                     </div>
                 </div>
             </div>
         </div>
         <div class="main">
             <div class="wrapper">
-                <div class="content">
-                <#if timelines?size <= 0>
-                <div id="emptyTimeline">${emptyTimelineLabel}</div>
-                </#if>
-                <div class="list single-line">
-                    <ul id="ul">
-                        <#list timelines as timeline>
-                        <li>${timeline.content}</li>
-                        </#list>
-                    </ul>
-                </div>
-                </div>
                 <div class="fn-hr10"></div>
                 <div class="side">
                     <#include "../side.ftl">
@@ -50,10 +41,5 @@
         </div> 
 
         <#include '../footer.ftl'/>
-        <script src="${staticServePath}/js/channel${miniPostfix}.js?${staticResourceVersion}"></script>
-        <script>
-                            // Init [Timeline] channel
-                            TimelineChannel.init("${wsScheme}://${serverHost}:${serverPort}${contextPath}/timeline-channel", 20);
-        </script>
     </body>
 </html>

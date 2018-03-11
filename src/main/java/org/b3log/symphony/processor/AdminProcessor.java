@@ -1,6 +1,6 @@
 /*
  * Symphony - A modern community (forum/SNS/blog) platform written in Java.
- * Copyright (C) 2012-2017,  b3log.org & hacpai.com
+ * Copyright (C) 2012-2018, b3log.org & hacpai.com
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,6 +49,7 @@ import org.b3log.symphony.processor.advice.stopwatch.StopwatchStartAdvice;
 import org.b3log.symphony.processor.advice.validate.UserRegister2Validation;
 import org.b3log.symphony.processor.advice.validate.UserRegisterValidation;
 import org.b3log.symphony.service.*;
+import org.b3log.symphony.util.Escapes;
 import org.b3log.symphony.util.Symphonys;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -109,7 +110,7 @@ import java.util.*;
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
  * @author Bill Ho
  * @author <a href="http://vanessa.b3log.org">Liyuan Li</a>
- * @version 2.26.7.25, Aug 11, 2017
+ * @version 2.26.9.0, Dec 10, 2017
  * @since 1.1.0
  */
 @RequestProcessor
@@ -1123,14 +1124,12 @@ public class AdminProcessor {
         requestJSONObject.put(Pagination.PAGINATION_CURRENT_PAGE_NUM, pageNum);
         requestJSONObject.put(Pagination.PAGINATION_PAGE_SIZE, pageSize);
         requestJSONObject.put(Pagination.PAGINATION_WINDOW_SIZE, windowSize);
-
-        final String nameOrEmail = request.getParameter(Common.USER_NAME_OR_EMAIL);
-        if (!Strings.isEmptyOrNull(nameOrEmail)) {
-            requestJSONObject.put(Common.USER_NAME_OR_EMAIL, nameOrEmail);
+        final String query = request.getParameter(Common.QUERY);
+        if (!Strings.isEmptyOrNull(query)) {
+            requestJSONObject.put(Common.QUERY, query);
         }
 
         final JSONObject result = userQueryService.getUsers(requestJSONObject);
-
         dataModel.put(User.USERS, CollectionUtils.jsonArrayToList(result.optJSONArray(User.USERS)));
 
         final JSONObject pagination = result.optJSONObject(Pagination.PAGINATION);
@@ -1165,6 +1164,7 @@ public class AdminProcessor {
         final Map<String, Object> dataModel = renderer.getDataModel();
 
         final JSONObject user = userQueryService.getUser(userId);
+        Escapes.escapeHTML(user);
         dataModel.put(User.USER, user);
 
         final JSONObject result = roleQueryService.getRoles(1, Integer.MAX_VALUE, 10);
@@ -1285,6 +1285,7 @@ public class AdminProcessor {
 
         final JSONObject user = userQueryService.getUser(userId);
         dataModel.put(User.USER, user);
+        final String oldRole = user.optString(User.USER_ROLE);
 
         final JSONObject result = roleQueryService.getRoles(1, Integer.MAX_VALUE, 10);
         final List<JSONObject> roles = (List<JSONObject>) result.opt(Role.ROLES);
@@ -1339,6 +1340,11 @@ public class AdminProcessor {
 
                     break;
             }
+        }
+
+        final JSONObject currentUser = (JSONObject) request.getAttribute(User.USER);
+        if (!Role.ROLE_ID_C_ADMIN.equals(currentUser.optString(User.USER_ROLE))) {
+            user.put(User.USER_ROLE, oldRole);
         }
 
         userMgmtService.updateUser(userId, user);
@@ -1732,6 +1738,7 @@ public class AdminProcessor {
         final Map<String, Object> dataModel = renderer.getDataModel();
 
         final JSONObject article = articleQueryService.getArticle(articleId);
+        Escapes.escapeHTML(article);
         dataModel.put(Article.ARTICLE, article);
 
         dataModelService.fillHeaderAndFooter(request, response, dataModel);
@@ -1865,6 +1872,7 @@ public class AdminProcessor {
         final Map<String, Object> dataModel = renderer.getDataModel();
 
         final JSONObject comment = commentQueryService.getComment(commentId);
+        Escapes.escapeHTML(comment);
         dataModel.put(Comment.COMMENT, comment);
 
         dataModelService.fillHeaderAndFooter(request, response, dataModel);

@@ -90,9 +90,11 @@
                 </div>
                 <div class="index-side">
                     <div class="index-tabs fn-flex">
-                        <span class="perfect current">
-                            <svg><use xlink:href="#perfect"></use></svg>
+                        <span class="perfect">
+                            <a href="${servePath}/perfect">
+                                <svg><use xlink:href="#perfect"></use></svg>
                             ${perfectLabel}
+                            </a>
                         </span>
                         <span class="check">
                             <#if isLoggedIn && !isDailyCheckin>
@@ -113,7 +115,8 @@
                                     <span class="avatar-small tooltipped tooltipped-se" aria-label="${article.articleAuthorName}" style="background-image:url('${article.articleAuthorThumbnailURL48}')"></span>
                                 </a>
                                 <a rel="nofollow" class="fn-ellipsis ft-a-title" href="${servePath}${article.articlePermalink}">${article.articleTitleEmoj}</a>
-                                <a class="fn-right count ft-gray ft-smaller" href="${servePath}${article.articlePermalink}">${article.articleViewCount}</a>
+                                <a class="fn-right count ft-gray ft-smaller" href="${servePath}${article.articlePermalink}"><#if article.articleViewCount < 1000>
+                                    ${article.articleViewCount}<#else>${article.articleViewCntDisplayFormat}</#if></a>
                             </li>
                             </#list>
                             <#if perfectArticles?size == 0>
@@ -125,7 +128,7 @@
             </div>
             <div class="index__bottom">
                 <div class="wrapper">
-                    <div class="index-main">
+                    <div class="fn-flex-1">
                         <div class="metro-line fn-flex">
                             <div class="metro-item">
                                 <a class="preview" href="${servePath}/tag/${tag0.tagURI}">
@@ -133,7 +136,7 @@
                                     <b>${tag0.tagTitle}</b>
                                 </a>
                             </div>
-                            <div class="metro-item mid">
+                            <div class="metro-item">
                                 <a class="preview" href="${servePath}/tag/${tag1.tagURI}">
                                     <img src="${staticServePath}/images/tags/${tag1.tagIconPath}" alt="${tag1.tagTitle}">
                                     <b>${tag1.tagTitle}</b>
@@ -145,35 +148,33 @@
                                     <b>${tag2.tagTitle}</b>
                                 </a>
                             </div>
-                        </div>
-                        <div class="metro-line fn-flex">
                             <div class="metro-item">
                                 <a class="preview" href="${servePath}/tag/${tag3.tagURI}">
                                     <img src="${staticServePath}/images/tags/${tag3.tagIconPath}" alt="${tag3.tagTitle}">
                                     <b>${tag3.tagTitle}</b>
                                 </a>
                             </div>
-                            <div class="metro-item mid">
+                            <div class="metro-item">
                                 <a class="preview" href="${servePath}/tag/${tag4.tagURI}">
                                     <img src="${staticServePath}/images/tags/${tag4.tagIconPath}" alt="${tag4.tagTitle}">
                                     <b>${tag4.tagTitle}</b>
                                 </a>
                             </div>
+                        </div>
+                        <div class="metro-line fn-flex">
                             <div class="metro-item">
                                 <a class="preview" href="${servePath}/tag/${tag5.tagURI}">
                                     <img src="${staticServePath}/images/tags/${tag5.tagIconPath}" alt="${tag5.tagTitle}">
                                     <b>${tag5.tagTitle}</b>
                                 </a>
                             </div>
-                        </div>
-                        <div class="metro-line fn-flex">
                             <div class="metro-item">
                                 <a class="preview" href="${servePath}/tag/${tag6.tagURI}">
                                     <img src="${staticServePath}/images/tags/${tag6.tagIconPath}" alt="${tag6.tagTitle}">
                                     <b>${tag6.tagTitle}</b>
                                 </a>
                             </div>
-                            <div class="metro-item mid">
+                            <div class="metro-item">
                                 <a class="preview" href="${servePath}/tag/${tag7.tagURI}">
                                     <img src="${staticServePath}/images/tags/${tag7.tagIconPath}" alt="${tag7.tagTitle}">
                                     <b>${tag7.tagTitle}</b>
@@ -185,56 +186,75 @@
                                     <b>${tag8.tagTitle}</b>
                                 </a>
                             </div>
+                            <div class="metro-item">
+                                <a class="preview" href="${servePath}/tag/${tag9.tagURI}">
+                                    <img src="${staticServePath}/images/tags/${tag9.tagIconPath}" alt="${tag9.tagTitle}">
+                                    <b>${tag9.tagTitle}</b>
+                                </a>
+                            </div>
                         </div>
+                        <div class="metro-line fn-flex">
+                            <div class="metro-item">
+                                <a class="preview" href="${servePath}/tag/${tag10.tagURI}">
+                                    <img src="${staticServePath}/images/tags/${tag10.tagIconPath}" alt="${tag10.tagTitle}">
+                                    <b>${tag10.tagTitle}</b>
+                                </a>
+                            </div>
+                            <div class="metro-item">
+                                <a class="preview" href="${servePath}/tag/${tag11.tagURI}">
+                                    <img src="${staticServePath}/images/tags/${tag11.tagIconPath}" alt="${tag11.tagTitle}">
+                                    <b>${tag11.tagTitle}</b>
+                                </a>
+                            </div>
+                            <div class="metro-item">
+                                <a class="preview" href="${servePath}/tag/${tag12.tagURI}">
+                                    <img src="${staticServePath}/images/tags/${tag12.tagIconPath}" alt="${tag12.tagTitle}">
+                                    <b>${tag12.tagTitle}</b>
+                                </a>
+                            </div>
+                            <div class="metro-item">
+                            <#if ADLabel != '' >
+                                <a class="preview" href="https://hacpai.com/article/1460083956075">
+                                    <img src="${staticServePath}/emoji/graphics/heart.png" alt="${sponsorLabel}">
+                                    <b>${adDeliveryLabel}</b>
+                                </a>
+                            <#else>
+                                <a class="preview" href="https://hacpai.com/man">
+                                    <img src="${staticServePath}/images/tags/shell.png" alt="${sponsorLabel}">
+                                    <b>Hacker's Manual</b>
+                                </a>
+                            </#if>
+                            </div>
+                            <div class="metro-item">
+                            <#if ADLabel != '' >
+                                <div class="ad">
+                                ${ADLabel}
+                                </div>
+                            <#else>
+                                <a class="preview" href="https://hacpai.com/article/1460083956075">
+                                    <img src="${staticServePath}/emoji/graphics/heart.png" alt="${sponsorLabel}">
+                                    <b>${adDeliveryLabel}</b>
+                                </a>
+                            </#if>
+                            </div>
+                        </div>
+
                         <div class="metro-border fn-flex">
                             <div></div>
                             <div class="green"></div>
                             <div class="yellow"></div>
+                            <div class="red"></div>
+                            <div class="purple"></div>
                         </div>
-                    </div>
-                    <div class="index-side down">
-                        <div class="list timeline ft-gray single-line">
-                            <ul>
-                                <#if timelines?size <= 0>
-                                <li id="emptyTimeline">${emptyTimelineLabel}</li>
-                                </#if>
-                                <#list timelines as article>
-                                <#if article_index < 20>
-                                <li>
-                                    ${article.content}
-                                </li>
-                                </#if>
-                            </#list>
-                        </ul>
-                    </div>
-                    <div class="metro-line fn-flex">
-                        <div class="metro-item">
-                            <!-- ${ADLabel} -->
-                            <a class="preview" href="https://hacpai.com/man">
-                                <img width="44px" src="${staticServePath}/images/tags/shell.png" alt="${sponsorLabel}">
-                                <b>Hacker's Manual</b>
-                            </a>
-                        </div>
-                        <div class="metro-item last">
-                            <a class="preview" href="https://hacpai.com/article/1460083956075">
-                                <img width="44px" src="${staticServePath}/emoji/graphics/heart.png" alt="${sponsorLabel}">
-                                <b>${adDeliveryLabel}</b>
-                            </a>
-                        </div>
-                    </div>
-                    <div class="metro-border fn-flex">
-                        <div></div>
-                        <div class="purple"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <#include "footer.ftl">   
+    <#include "footer.ftl">
     <script src="${staticServePath}/js/channel${miniPostfix}.js?${staticResourceVersion}"></script>
     <script type="text/javascript">
         $('.metro-item').height($('.metro-item').width());
-        $('.timeline ul').outerHeight($('.metro-item').width() * 2 + 2);
 
         // tab
         $('#articles span').click(function () {
@@ -273,10 +293,6 @@
         } else {
             localStorage.setItem('indexTab', 0);
         }
-        
-
-        // Init [Timeline] channel
-        TimelineChannel.init("${wsScheme}://${serverHost}:${serverPort}${contextPath}/timeline-channel", 20);
     </script>
 </body>
 </html>

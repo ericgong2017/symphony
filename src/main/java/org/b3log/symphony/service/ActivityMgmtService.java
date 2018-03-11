@@ -1,6 +1,6 @@
 /*
  * Symphony - A modern community (forum/SNS/blog) platform written in Java.
- * Copyright (C) 2012-2017,  b3log.org & hacpai.com
+ * Copyright (C) 2012-2018, b3log.org & hacpai.com
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,17 +22,13 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.b3log.latke.Keys;
-import org.b3log.latke.Latkes;
 import org.b3log.latke.ioc.inject.Inject;
 import org.b3log.latke.logging.Level;
 import org.b3log.latke.logging.Logger;
-import org.b3log.latke.model.User;
 import org.b3log.latke.repository.*;
 import org.b3log.latke.service.LangPropsService;
-import org.b3log.latke.service.ServiceException;
 import org.b3log.latke.service.annotation.Service;
 import org.b3log.latke.util.Strings;
-import org.b3log.symphony.model.Common;
 import org.b3log.symphony.model.Liveness;
 import org.b3log.symphony.model.Pointtransfer;
 import org.b3log.symphony.model.UserExt;
@@ -58,7 +54,7 @@ import java.util.Random;
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
  * @author <a href="http://zephyr.b3log.org">Zephyr</a>
- * @version 1.6.9.7, Apr 5, 2017
+ * @version 1.6.10.1, Jan 30, 2018
  * @since 1.3.0
  */
 @Service
@@ -118,12 +114,6 @@ public class ActivityMgmtService {
     private LangPropsService langPropsService;
 
     /**
-     * Timeline management service.
-     */
-    @Inject
-    private TimelineMgmtService timelineMgmtService;
-
-    /**
      * Liveness management service.
      */
     @Inject
@@ -155,26 +145,7 @@ public class ActivityMgmtService {
         final String msg = succ ? "started" : langPropsService.get("activityStartEatingSnakeFailLabel");
         ret.put(Keys.MSG, msg);
 
-        try {
-            final JSONObject user = userQueryService.getUser(userId);
-            final String userName = user.optString(User.USER_NAME);
-
-            // Timeline
-            final JSONObject timeline = new JSONObject();
-            timeline.put(Common.USER_ID, userId);
-            timeline.put(Common.TYPE, Common.ACTIVITY);
-            String content = langPropsService.get("timelineActivityEatingSnakeLabel");
-            content = content.replace("{user}", "<a target='_blank' rel='nofollow' href='" + Latkes.getServePath()
-                    + "/member/" + userName + "'>" + userName + "</a>").replace("${servePath}", Latkes.getServePath());
-            timeline.put(Common.CONTENT, content);
-
-            timelineMgmtService.addTimeline(timeline);
-
-            // Liveness
-            livenessMgmtService.incLiveness(userId, Liveness.LIVENESS_ACTIVITY);
-        } catch (final ServiceException e) {
-            LOGGER.log(Level.ERROR, "Timeline error", e);
-        }
+        livenessMgmtService.incLiveness(userId, Liveness.LIVENESS_ACTIVITY);
 
         return ret;
     }
@@ -302,24 +273,6 @@ public class ActivityMgmtService {
                     Pointtransfer.TRANSFER_TYPE_C_ACTIVITY_CHARACTER, Pointtransfer.TRANSFER_SUM_C_ACTIVITY_CHARACTER,
                     characterId, System.currentTimeMillis());
 
-            try {
-                final JSONObject user = userQueryService.getUser(userId);
-                final String userName = user.optString(User.USER_NAME);
-
-                // Timeline
-                final JSONObject timeline = new JSONObject();
-                timeline.put(Common.USER_ID, userId);
-                timeline.put(Common.TYPE, Common.ACTIVITY);
-                String content = langPropsService.get("timelineActivityCharacterLabel");
-                content = content.replace("{user}", "<a target='_blank' rel='nofollow' href='" + Latkes.getServePath()
-                        + "/member/" + userName + "'>" + userName + "</a>").replace("${servePath}", Latkes.getServePath());
-                timeline.put(Common.CONTENT, content);
-
-                timelineMgmtService.addTimeline(timeline);
-            } catch (final Exception e) {
-                LOGGER.log(Level.ERROR, "Submits character timeline failed", e);
-            }
-
             ret.put(Keys.STATUS_CODE, true);
             ret.put(Keys.MSG, langPropsService.get("activityCharacterRecognizeSuccLabel"));
         } else {
@@ -369,6 +322,8 @@ public class ActivityMgmtService {
                 user.put(UserExt.USER_CURRENT_CHECKIN_STREAK_END, todayInt);
                 user.put(UserExt.USER_LONGEST_CHECKIN_STREAK_START, todayInt);
                 user.put(UserExt.USER_LONGEST_CHECKIN_STREAK_END, todayInt);
+                user.put(UserExt.USER_CURRENT_CHECKIN_STREAK, 1);
+                user.put(UserExt.USER_LONGEST_CHECKIN_STREAK, 1);
 
                 userMgmtService.updateUser(userId, user);
 
@@ -423,20 +378,6 @@ public class ActivityMgmtService {
                         Pointtransfer.TRANSFER_SUM_C_ACTIVITY_CHECKINT_STREAK, userId, System.currentTimeMillis());
             }
 
-            final String userName = user.optString(User.USER_NAME);
-
-            // Timeline
-            final JSONObject timeline = new JSONObject();
-            timeline.put(Common.USER_ID, userId);
-            timeline.put(Common.TYPE, Common.ACTIVITY);
-            String content = langPropsService.get("timelineActivityCheckinLabel");
-            content = content.replace("{user}", "<a target='_blank' rel='nofollow' href='" + Latkes.getServePath()
-                    + "/member/" + userName + "'>" + userName + "</a>").replace("${servePath}", Latkes.getServePath());
-            timeline.put(Common.CONTENT, content);
-
-            timelineMgmtService.addTimeline(timeline);
-
-            // Liveness
             livenessMgmtService.incLiveness(userId, Liveness.LIVENESS_ACTIVITY);
 
             return sum;
@@ -475,26 +416,7 @@ public class ActivityMgmtService {
                 ? langPropsService.get("activityBetSuccLabel") : langPropsService.get("activityBetFailLabel");
         ret.put(Keys.MSG, msg);
 
-        try {
-            final JSONObject user = userQueryService.getUser(userId);
-            final String userName = user.optString(User.USER_NAME);
-
-            // Timeline
-            final JSONObject timeline = new JSONObject();
-            timeline.put(Common.USER_ID, userId);
-            timeline.put(Common.TYPE, Common.ACTIVITY);
-            String content = langPropsService.get("timelineActivity1A0001Label");
-            content = content.replace("{user}", "<a target='_blank' rel='nofollow' href='" + Latkes.getServePath()
-                    + "/member/" + userName + "'>" + userName + "</a>").replace("${servePath}", Latkes.getServePath());
-            timeline.put(Common.CONTENT, content);
-
-            timelineMgmtService.addTimeline(timeline);
-
-            // Liveness
-            livenessMgmtService.incLiveness(userId, Liveness.LIVENESS_ACTIVITY);
-        } catch (final ServiceException e) {
-            LOGGER.log(Level.ERROR, "Timeline error", e);
-        }
+        livenessMgmtService.incLiveness(userId, Liveness.LIVENESS_ACTIVITY);
 
         return ret;
     }
@@ -638,26 +560,7 @@ public class ActivityMgmtService {
         final String msg = succ ? "started" : langPropsService.get("activityStartGobangFailLabel");
         ret.put(Keys.MSG, msg);
 
-        try {
-            final JSONObject user = userQueryService.getUser(userId);
-            final String userName = user.optString(User.USER_NAME);
-
-            // Timeline
-            final JSONObject timeline = new JSONObject();
-            timeline.put(Common.USER_ID, userId);
-            timeline.put(Common.TYPE, Common.ACTIVITY);
-            String content = langPropsService.get("timelineActivityGobangLabel");
-            content = content.replace("{user}", "<a target='_blank' rel='nofollow' href='" + Latkes.getServePath()
-                    + "/member/" + userName + "'>" + userName + "</a>").replace("${servePath}", Latkes.getServePath());
-            timeline.put(Common.CONTENT, content);
-
-            timelineMgmtService.addTimeline(timeline);
-
-            // Liveness
-            livenessMgmtService.incLiveness(userId, Liveness.LIVENESS_ACTIVITY);
-        } catch (final ServiceException e) {
-            LOGGER.log(Level.ERROR, "Timeline error", e);
-        }
+        livenessMgmtService.incLiveness(userId, Liveness.LIVENESS_ACTIVITY);
 
         return ret;
     }

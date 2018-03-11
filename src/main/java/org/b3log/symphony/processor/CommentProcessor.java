@@ -1,6 +1,6 @@
 /*
  * Symphony - A modern community (forum/SNS/blog) platform written in Java.
- * Copyright (C) 2012-2017,  b3log.org & hacpai.com
+ * Copyright (C) 2012-2018, b3log.org & hacpai.com
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,7 +71,7 @@ import java.util.Set;
  * </p>
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.7.3.0, Sep 14, 2017
+ * @version 1.7.3.1, Nov 11, 2017
  * @since 0.2.0
  */
 @RequestProcessor
@@ -141,6 +141,12 @@ public class CommentProcessor {
      */
     @Inject
     private ShortLinkQueryService shortLinkQueryService;
+
+    /**
+     * Follow management service.
+     */
+    @Inject
+    private FollowMgmtService followMgmtService;
 
     /**
      * Removes a comment.
@@ -321,14 +327,12 @@ public class CommentProcessor {
     /**
      * Gets a comment's original comment.
      *
-     * @param context  the specified context
-     * @param request  the specified request
-     * @param response the specified response
+     * @param context the specified context
+     * @param request the specified request
      * @throws Exception exception
      */
     @RequestProcessing(value = "/comment/original", method = HTTPRequestMethod.POST)
-    public void getOriginalComment(final HTTPRequestContext context,
-                                   final HttpServletRequest request, final HttpServletResponse response) throws Exception {
+    public void getOriginalComment(final HTTPRequestContext context, final HttpServletRequest request) throws Exception {
         final JSONObject requestJSONObject = Requests.parseRequestJSONObject(request, context.getResponse());
         final String commentId = requestJSONObject.optString(Comment.COMMENT_T_ID);
         int commentViewMode = requestJSONObject.optInt(UserExt.USER_COMMENT_VIEW_MODE);
@@ -485,12 +489,17 @@ public class CommentProcessor {
                 }
             }
 
-            comment.put(Comment.COMMENT_AUTHOR_ID, currentUser.optString(Keys.OBJECT_ID));
+            final String commentAuthorId = currentUser.optString(Keys.OBJECT_ID);
+            comment.put(Comment.COMMENT_AUTHOR_ID, commentAuthorId);
             comment.put(Comment.COMMENT_T_COMMENTER, currentUser);
             comment.put(Comment.COMMENT_ANONYMOUS, isAnonymous
                     ? Comment.COMMENT_ANONYMOUS_C_ANONYMOUS : Comment.COMMENT_ANONYMOUS_C_PUBLIC);
 
             commentMgmtService.addComment(comment);
+
+            if (!commentAuthorId.equals(articleAuthorId)) {
+                followMgmtService.watchArticle(commentAuthorId, articleId);
+            }
 
             context.renderJSONValue(Keys.STATUS_CODE, StatusCodes.SUCC);
         } catch (final ServiceException e) {

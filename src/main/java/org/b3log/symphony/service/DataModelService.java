@@ -1,6 +1,6 @@
 /*
  * Symphony - A modern community (forum/SNS/blog) platform written in Java.
- * Copyright (C) 2012-2017,  b3log.org & hacpai.com
+ * Copyright (C) 2012-2018, b3log.org & hacpai.com
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ import java.util.*;
  * Data model service.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.12.2.29, May 24, 2017
+ * @version 1.12.2.32, Jan 30, 2018
  * @since 0.2.0
  */
 @Service
@@ -236,7 +236,7 @@ public class DataModelService {
     public void fillIndexTags(final Map<String, Object> dataModel) throws Exception {
         Stopwatchs.start("Fills index tags");
         try {
-            for (int i = 0; i < 9; i++) {
+            for (int i = 0; i < 13; i++) {
                 final JSONObject tag = new JSONObject();
                 tag.put(Tag.TAG_URI, "Sym");
                 tag.put(Tag.TAG_ICON_PATH, "sym.png");
@@ -311,6 +311,10 @@ public class DataModelService {
         dataModel.put(Common.YEAR, String.valueOf(Calendar.getInstance().get(Calendar.YEAR)));
         dataModel.put(Common.SITE_VISIT_STAT_CODE, Symphonys.get("siteVisitStatCode"));
         dataModel.put(Common.MOUSE_EFFECTS, RandomUtils.nextDouble() > 0.95);
+        dataModel.put(Common.MACRO_HEAD_PC_CODE, Symphonys.get(Common.MACRO_HEAD_PC_CODE));
+        dataModel.put(Common.MACRO_HEAD_MOBILE_CODE, Symphonys.get(Common.MACRO_HEAD_MOBILE_CODE));
+        dataModel.put(Common.FOOTER_PC_CODE, Symphonys.get(Common.FOOTER_PC_CODE));
+        dataModel.put(Common.FOOTER_MOBILE_CODE, Symphonys.get(Common.FOOTER_MOBILE_CODE));
     }
 
     /**
@@ -481,15 +485,20 @@ public class DataModelService {
             return;
         }
 
-        final Map<String, String> labels = langPropsService.getAll(Locales.getLocale());
         final List<String> tipsLabels = new ArrayList<>();
-
+        final Map<String, String> labels = langPropsService.getAll(Locales.getLocale());
         for (final Map.Entry<String, String> entry : labels.entrySet()) {
             final String key = entry.getKey();
             if (key.startsWith("tips")) {
                 tipsLabels.add(entry.getValue());
             }
         }
+
+        // Builtin for Sym promotion
+        tipsLabels.add("<img align=\"absmiddle\" alt=\"tada\" class=\"emoji\" src=\"" + Latkes.getStaticServePath() +
+                "/emoji/graphics/tada.png\" title=\"tada\"> 本站使用开源系统 <a href=\"https://github.com/b3log/symphony\">Sym</a> 搭建，请为它点赞！");
+        tipsLabels.add("<img align=\"absmiddle\" alt=\"sparkles\" class=\"emoji\" src=\"" + Latkes.getStaticServePath() +
+                "/emoji/graphics/sparkles.png\" title=\"sparkles\"> 欢迎使用 <a href=\"http://sym.b3log.org\">Sym</a> 来搭建自己的社区！");
 
         dataModel.put("tipsLabel", tipsLabels.get(RandomUtils.nextInt(tipsLabels.size())));
     }

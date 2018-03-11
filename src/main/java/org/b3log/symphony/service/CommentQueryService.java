@@ -1,6 +1,6 @@
 /*
  * Symphony - A modern community (forum/SNS/blog) platform written in Java.
- * Copyright (C) 2012-2017,  b3log.org & hacpai.com
+ * Copyright (C) 2012-2018, b3log.org & hacpai.com
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
 package org.b3log.symphony.service;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.DateFormatUtils;
 import org.b3log.latke.Keys;
 import org.b3log.latke.Latkes;
 import org.b3log.latke.ioc.inject.Inject;
@@ -50,7 +51,7 @@ import java.util.*;
  * Comment management service.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 2.11.9.27, May 12, 2017
+ * @version 2.11.10.1, Dec 8, 2017
  * @since 0.2.0
  */
 @Service
@@ -178,6 +179,7 @@ public class CommentQueryService {
             ret.put(Comment.COMMENT_T_AUTHOR_NAME, comment.optString(Comment.COMMENT_T_AUTHOR_NAME));
             ret.put(Comment.COMMENT_T_AUTHOR_THUMBNAIL_URL, comment.optString(Comment.COMMENT_T_AUTHOR_THUMBNAIL_URL));
             ret.put(Common.TIME_AGO, comment.optString(Common.TIME_AGO));
+            ret.put(Comment.COMMENT_CREATE_TIME_STR, comment.optString(Comment.COMMENT_CREATE_TIME_STR));
             ret.put(Common.REWARED_COUNT, comment.optString(Common.REWARED_COUNT));
             ret.put(Common.REWARDED, comment.optBoolean(Common.REWARDED));
             ret.put(Keys.OBJECT_ID, commentId);
@@ -230,6 +232,7 @@ public class CommentQueryService {
                 reply.put(Comment.COMMENT_T_AUTHOR_NAME, comment.optString(Comment.COMMENT_T_AUTHOR_NAME));
                 reply.put(Comment.COMMENT_T_AUTHOR_THUMBNAIL_URL, comment.optString(Comment.COMMENT_T_AUTHOR_THUMBNAIL_URL));
                 reply.put(Common.TIME_AGO, comment.optString(Common.TIME_AGO));
+                reply.put(Comment.COMMENT_CREATE_TIME_STR, comment.optString(Comment.COMMENT_CREATE_TIME_STR));
                 reply.put(Common.REWARED_COUNT, comment.optString(Common.REWARED_COUNT));
                 reply.put(Common.REWARDED, comment.optBoolean(Common.REWARDED));
                 reply.put(Keys.OBJECT_ID, comment.optString(Keys.OBJECT_ID));
@@ -729,23 +732,11 @@ public class CommentQueryService {
 
     /**
      * Organizes the specified comments.
-     * <p>
-     * <ul>
-     * <li>converts comment create time (long) to date type</li>
-     * <li>generates comment author thumbnail URL</li>
-     * <li>generates comment author URL</li>
-     * <li>generates comment author name</li>
-     * <li>generates &#64;username home URL</li>
-     * <li>markdowns comment content</li>
-     * <li>block comment if need</li>
-     * <li>generates emotion images</li>
-     * <li>generates time ago text</li>
-     * <li>anonymous process</li>
-     * </ul>
      *
      * @param avatarViewMode the specified avatar view mode
      * @param comments       the specified comments
      * @throws RepositoryException repository exception
+     * @see #organizeComment(int, JSONObject)
      */
     private void organizeComments(final int avatarViewMode, final List<JSONObject> comments) throws RepositoryException {
         Stopwatchs.start("Organizes comments");
@@ -761,7 +752,6 @@ public class CommentQueryService {
 
     /**
      * Organizes the specified comment.
-     * <p>
      * <ul>
      * <li>converts comment create time (long) to date type</li>
      * <li>generates comment author thumbnail URL</li>
@@ -783,9 +773,10 @@ public class CommentQueryService {
         Stopwatchs.start("Organize comment");
 
         try {
-            comment.put(Common.TIME_AGO,
-                    Times.getTimeAgo(comment.optLong(Comment.COMMENT_CREATE_TIME), Locales.getLocale()));
-            comment.put(Comment.COMMENT_CREATE_TIME, new Date(comment.optLong(Comment.COMMENT_CREATE_TIME)));
+            comment.put(Common.TIME_AGO, Times.getTimeAgo(comment.optLong(Comment.COMMENT_CREATE_TIME), Locales.getLocale()));
+            final Date createDate = new Date(comment.optLong(Comment.COMMENT_CREATE_TIME));
+            comment.put(Comment.COMMENT_CREATE_TIME, createDate);
+            comment.put(Comment.COMMENT_CREATE_TIME_STR, DateFormatUtils.format(createDate, "yyyy-MM-dd HH:mm:ss"));
 
             final String authorId = comment.optString(Comment.COMMENT_AUTHOR_ID);
             final JSONObject author = userRepository.get(authorId);

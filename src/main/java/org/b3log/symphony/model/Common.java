@@ -1,6 +1,6 @@
 /*
  * Symphony - A modern community (forum/SNS/blog) platform written in Java.
- * Copyright (C) 2012-2017,  b3log.org & hacpai.com
+ * Copyright (C) 2012-2018, b3log.org & hacpai.com
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,10 +21,20 @@ package org.b3log.symphony.model;
  * This class defines all common model relevant keys.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.62.1.13, Aug 15, 2017
+ * @version 1.65.0.1, Jan 30, 2018
  * @since 0.2.0
  */
 public final class Common {
+
+    /**
+     * Key of query.
+     */
+    public static final String QUERY = "query";
+
+    /**
+     * Key of code.
+     */
+    public static final String CODE = "code";
 
     /**
      * Key of command.
@@ -462,16 +472,6 @@ public final class Common {
     public static final String RECENT = "recent";
 
     /**
-     * Key of timeline.
-     */
-    public static final String TIMELINE = "timeline";
-
-    /**
-     * Key of timelines.
-     */
-    public static final String TIMELINES = "timelines";
-
-    /**
      * Key of hot articles.
      */
     public static final String HOT_ARTICLES = "hotArticles";
@@ -762,6 +762,26 @@ public final class Common {
     public static final String SITE_VISIT_STAT_CODE = "siteVisitStatCode";
 
     /**
+     * Key of macro head PC.
+     */
+    public static final String MACRO_HEAD_PC_CODE = "macroHeadPCCode";
+
+    /**
+     * Key of macro head mobile code.
+     */
+    public static final String MACRO_HEAD_MOBILE_CODE = "macroHeadMobileCode";
+
+    /**
+     * Key of footer PC code.
+     */
+    public static final String FOOTER_PC_CODE = "footerPCCode";
+
+    /**
+     * Key of footer mobile code.
+     */
+    public static final String FOOTER_MOBILE_CODE = "footerMobileCode";
+
+    /**
      * Key of online visitor count.
      */
     public static final String ONLINE_VISITOR_CNT = "onlineVisitorCnt";
@@ -815,11 +835,6 @@ public final class Common {
      * Key of usernames.
      */
     public static final String USER_NAMES = "userNames";
-
-    /**
-     * Key of username or email.
-     */
-    public static final String USER_NAME_OR_EMAIL = "userNameOrEmail";
 
     /**
      * Key of operation.

@@ -1,6 +1,6 @@
 /*
  * Symphony - A modern community (forum/SNS/blog) platform written in Java.
- * Copyright (C) 2012-2017,  b3log.org & hacpai.com
+ * Copyright (C) 2012-2018, b3log.org & hacpai.com
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -232,17 +232,12 @@ public class ChatRoomProcessor {
      * </pre>
      * </p>
      *
-     * @param context  the specified context
-     * @param request  the specified request
-     * @param response the specified response
-     * @throws IOException      io exception
-     * @throws ServletException servlet exception
+     * @param context the specified context
+     * @param request the specified request
      */
     @RequestProcessing(value = "/chat-room/send", method = HTTPRequestMethod.POST)
     @Before(adviceClass = {ChatMsgAddValidation.class})
-    public synchronized void addChatRoomMsg(final HTTPRequestContext context,
-                                            final HttpServletRequest request, final HttpServletResponse response)
-            throws IOException, ServletException {
+    public synchronized void addChatRoomMsg(final HTTPRequestContext context, final HttpServletRequest request) {
         context.renderJSON();
 
         final JSONObject requestJSONObject = (JSONObject) request.getAttribute(Keys.REQUEST);

@@ -1,6 +1,6 @@
 /*
  * Symphony - A modern community (forum/SNS/blog) platform written in Java.
- * Copyright (C) 2012-2017,  b3log.org & hacpai.com
+ * Copyright (C) 2012-2018, b3log.org & hacpai.com
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ package org.b3log.symphony.model;
  * This class defines all article model relevant keys.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.26.0.14, May 6, 2017
+ * @version 1.28.0.0, Dec 8, 2017
  * @since 0.2.0
  */
 public final class Article {
@@ -87,14 +87,29 @@ public final class Article {
     public static final String ARTICLE_CREATE_TIME = "articleCreateTime";
 
     /**
+     * Key of article create time str.
+     */
+    public static final String ARTICLE_CREATE_TIME_STR = "articleCreateTimeStr";
+
+    /**
      * Key of article update time.
      */
     public static final String ARTICLE_UPDATE_TIME = "articleUpdateTime";
 
     /**
+     * Key of article update time str.
+     */
+    public static final String ARTICLE_UPDATE_TIME_STR = "articleUpdateTimeStr";
+
+    /**
      * Key of article latest comment time.
      */
     public static final String ARTICLE_LATEST_CMT_TIME = "articleLatestCmtTime";
+
+    /**
+     * Key of article latest comment time str.
+     */
+    public static final String ARTICLE_LATEST_CMT_TIME_STR = "articleLatestCmtTimeStr";
 
     /**
      * Key of article latest commenter name.
@@ -333,11 +348,6 @@ public final class Article {
     public static final String ARTICLE_T_PARTICIPANT_URL = "articleParticipantURL";
 
     /**
-     * Key of is broadcast.
-     */
-    public static final String ARTICLE_T_IS_BROADCAST = "articleIsBroadcast";
-
-    /**
      * Key of article title with Emoj.
      */
     public static final String ARTICLE_T_TITLE_EMOJI = "articleTitleEmoj";
@@ -356,6 +366,11 @@ public final class Article {
      * Key of article ToC.
      */
     public static final String ARTICLE_T_TOC = "articleToC";
+
+    /**
+     * Key of article original content.
+     */
+    public static final String ARTICLE_T_ORIGINAL_CONTENT = "articleOriginalContent";
 
     // Anonymous constants
     /**

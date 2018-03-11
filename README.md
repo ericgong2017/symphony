@@ -74,12 +74,14 @@ Community edition:
 * [贵州IT](http://www.gzit.info)
 * [超级产品经理](https://imspm.com)
 * [蚂蚁程序猿](http://bbs.itmayiedu.com)
-* [漠游网](https://damoluomu.com)
-* [呆萌狮 - Demo's](http://www.daimengshi.com)
+* [北纬极客](https://begeek.bwae.org)
+* [胖虎社区](http://www.pwnhoo.com)
+* [架构师小秘圈](http://www.3xmq.com)
 
 Commercial edition:
 
 * [黑客派](https://hacpai.com)
+* [爱就来](https://ajlai.com)
 * [四方环视](http://bbs.ivrpano.com)
 * [汇桔网](https://bbs.wtoip.com)
 * [TapDealing](http://www.tapdealing.com)
@@ -227,7 +229,7 @@ Through the configuration can be integrated [SendCloud](http://sendcloud.sohu.co
 
 ![11](https://cloud.githubusercontent.com/assets/873584/19893293/b0014ba6-a083-11e6-9c9a-9debad14c826.png)
 
-* through the configuration can be integrated [Algolia](https://www.algolia.com/referrals/1faf0d17/join) cloud search service, can customize the search field, and the weight and ranking optimization
+* through the configuration can be integrated [Algolia](https://www.algolia.com) cloud search service, can customize the search field, and the weight and ranking optimization
 * can also build their own Elasticsearch and integrated through the configuration
 
 Follow up on the search function to strengthen, to achieve the conditions for filtering, the results highlight, please look forward to.
@@ -309,7 +311,7 @@ We are very much looking forward to your joining in this project, whether it is 
 
 In the implementation of [B3log idea](https://hacpai.com/b3log) of these years:
 
-* we have witnessed the rise and fall of xAE (GAE/BAE/SAE/etc). In 2009 GAE was selected as a server, and began to implement [Latke](https://github.com/b3log/latke) framework to solve the cross platform cloud, until [GAE] (https://hacpai.com/article/1443685401909), bid farewell to sigh technical change quickly
+* we have witnessed the rise and fall of xAE (GAE/BAE/SAE/etc). In 2009 GAE was selected as a server, and began to implement [Latke](https://github.com/b3log/latke) framework to solve the cross platform cloud, until [GAE](https://hacpai.com/article/1443685401909), bid farewell to sigh technical change quickly
 * feel the advantages and disadvantages of self-made wheels, and certainly a bit: for a long to product, technology advantages far outweigh the disadvantages of self-made frame
 * a playful product or the details of the characteristics of the egg, it needs to be done is a product / feature that can continue to provide user value.
 * although until the current B3log product users are not many, but we have a preliminary proof: Java used to achieve the blog, forum, there is nothing bad
@@ -347,6 +349,14 @@ Sym's birth can not be separated from the following open source projects:
 * [Latke](https://github.com/b3log/latke): full-stack Java Web framework
 * [NetBeans](https://netbeans.org): wonderful IDE
 * [IntelliJ IDEA](https://www.jetbrains.com/idea): another wonderful IDE
+
+Special thanks to security:
+
+* [米斯特安全团队](http://www.hi-ourlife.com)
+* [@gh0stkey](https://github.com/gh0stkey)
+* [@breezecoder](https://github.com/breezecoder)
+
+And other professionals to give great help!
 
 ----
 

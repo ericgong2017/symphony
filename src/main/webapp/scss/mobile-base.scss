@@ -1,6 +1,6 @@
 /*
  * Symphony - A modern community (forum/SNS/blog) platform written in Java.
- * Copyright (C) 2012-2017,  b3log.org & hacpai.com
+ * Copyright (C) 2012-2018, b3log.org & hacpai.com
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -716,6 +716,24 @@ ul.CodeMirror-hints {
 
 .CodeMirror pre.CodeMirror-placeholder {
   color: #999;
+}
+#revision .revisions {
+  margin: 5px 0 15px;
+  text-align: center;
+  a {
+    color: $black-light;
+    vertical-align: middle;
+    &:hover {
+      color: $black-text;
+    }
+    &.disabled {
+      color: $fade;
+      cursor: default;
+    }
+  }
+  span {
+    margin: 0 10px 0 10px;
+  }
 }
 
 /* end article */

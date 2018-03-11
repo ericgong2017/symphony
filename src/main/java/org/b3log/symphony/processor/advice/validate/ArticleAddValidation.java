@@ -1,6 +1,6 @@
 /*
  * Symphony - A modern community (forum/SNS/blog) platform written in Java.
- * Copyright (C) 2012-2017,  b3log.org & hacpai.com
+ * Copyright (C) 2012-2018, b3log.org & hacpai.com
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,6 @@ import org.b3log.latke.service.LangPropsServiceImpl;
 import org.b3log.latke.servlet.HTTPRequestContext;
 import org.b3log.latke.servlet.advice.BeforeRequestProcessAdvice;
 import org.b3log.latke.servlet.advice.RequestProcessAdviceException;
-import org.b3log.latke.util.Requests;
 import org.b3log.latke.util.Strings;
 import org.b3log.symphony.model.Article;
 import org.b3log.symphony.model.Role;
@@ -51,7 +50,7 @@ import java.util.Map;
  * Validates for article adding locally.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.3.4.11, Mar 9, 2017
+ * @version 1.3.5.0, Mar 2, 2018
  * @since 0.2.0
  */
 @Named
@@ -190,8 +189,12 @@ public class ArticleAddValidation extends BeforeRequestProcessAdvice {
             throw new RequestProcessAdviceException(exception.put(Keys.MSG, langPropsService.get("invalidRewardPointLabel")));
         }
 
+        final String articleRewardContnt = requestJSONObject.optString(Article.ARTICLE_REWARD_CONTENT);
+        if (StringUtils.isNotBlank(articleRewardContnt) && 1 > rewardPoint) {
+            throw new RequestProcessAdviceException(exception.put(Keys.MSG, langPropsService.get("invalidRewardPointLabel")));
+        }
+
         if (rewardPoint > 0) {
-            final String articleRewardContnt = requestJSONObject.optString(Article.ARTICLE_REWARD_CONTENT);
             if (Strings.isEmptyOrNull(articleRewardContnt) || articleRewardContnt.length() > MAX_ARTICLE_CONTENT_LENGTH
                     || articleRewardContnt.length() < MIN_ARTICLE_CONTENT_LENGTH) {
                 String msg = langPropsService.get("articleRewardContentErrorLabel");
@@ -205,14 +208,7 @@ public class ArticleAddValidation extends BeforeRequestProcessAdvice {
     @Override
     public void doAdvice(final HTTPRequestContext context, final Map<String, Object> args) throws RequestProcessAdviceException {
         final HttpServletRequest request = context.getRequest();
-
-        JSONObject requestJSONObject;
-        try {
-            requestJSONObject = Requests.parseRequestJSONObject(request, context.getResponse());
-            request.setAttribute(Keys.REQUEST, requestJSONObject);
-        } catch (final Exception e) {
-            throw new RequestProcessAdviceException(new JSONObject().put(Keys.MSG, e.getMessage()));
-        }
+        final JSONObject requestJSONObject = (JSONObject) args.get("requestJSONObject");
 
         validateArticleFields(request, requestJSONObject);
     }

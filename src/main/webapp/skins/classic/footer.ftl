@@ -8,7 +8,10 @@
                 <svg class="icon-weibo"><use xlink:href="#weibo"></use></svg></a>   &nbsp;
             <a target="_blank" class="tooltipped tooltipped-n" aria-label="${joinQQGroupLabel}"
                href="http://shang.qq.com/wpa/qunwpa?idkey=981d9282616274abb1752336e21b8036828f715a1c4d0628adcf208f2fd54f3a">
-                <svg class="icon-qq"><use xlink:href="#qq"></use></svg></a>
+                <svg class="icon-qq"><use xlink:href="#qq"></use></svg></a> &nbsp;
+            <a target="_blank" rel="noopener" class="tooltipped tooltipped-n" aria-label="${joinTelegramLabel}"
+               href="https://t.me/b3log">
+                <svg class="icon-telegram"><use xlink:href="#icon-telegram"></use></svg></a>
         </div>
         <div class="fn-flex-1">
             <div class="footer-nav fn-clear">
@@ -17,7 +20,6 @@
                 <a href="${servePath}/tag/announcement">${symAnnouncementLabel}</a>
                 <a href="${servePath}/domains">${domainLabel}</a>
                 <a href="${servePath}/tags">${tagLabel}</a>
-                <a href="${servePath}/forge/link">${forgeLabel}</a>
                 <a href="${servePath}/statistic">${dataStatLabel}</a>
 
                 <div class="fn-right">&COPY; ${year}
@@ -28,7 +30,7 @@
                        ${sloganLabel}
                     <div class="fn-right">
                        Powered by <a href="http://b3log.org" target="_blank">B3log 开源</a> •
-                            <a href="https://github.com/b3log/symphony" target="_blank">Sym</a>
+                            <a href="http://sym.b3log.org" target="_blank">Sym</a>
                             ${version} • ${elapsed?c}ms
                     </div>
                 </div>
@@ -90,3 +92,4 @@
     Util.initSearch('${algoliaAppId}', '${algoliaSearchKey}', '${algoliaIndex}');
 </script>
 </#if>
+${footerPCCode}

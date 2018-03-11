@@ -1,6 +1,6 @@
 /*
  * Symphony - A modern community (forum/SNS/blog) platform written in Java.
- * Copyright (C) 2012-2017,  b3log.org & hacpai.com
+ * Copyright (C) 2012-2018, b3log.org & hacpai.com
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ import javax.servlet.http.HttpSession;
  * Session utilities.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 2.0.2.5, Apr 12, 2017
+ * @version 2.0.3.0, Nov 8, 2017
  */
 public final class Sessions {
 
@@ -51,7 +51,7 @@ public final class Sessions {
     private static final Logger LOGGER = Logger.getLogger(Sessions.class);
 
     /**
-     * Cookie expiry: one year.
+     * Cookie expiry: 30 days.
      */
     private static final int COOKIE_EXPIRY = 60 * 60 * 24 * 30;
 

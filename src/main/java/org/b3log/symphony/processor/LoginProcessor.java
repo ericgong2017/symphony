@@ -1,6 +1,6 @@
 /*
  * Symphony - A modern community (forum/SNS/blog) platform written in Java.
- * Copyright (C) 2012-2017,  b3log.org & hacpai.com
+ * Copyright (C) 2012-2018, b3log.org & hacpai.com
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,7 +71,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
  * @author <a href="http://vanessa.b3log.org">LiYuan Li</a>
- * @version 1.13.10.0, Sep 14, 2017
+ * @version 1.13.11.2, Mar 2, 2018
  * @since 0.2.0
  */
 @RequestProcessor
@@ -131,12 +131,6 @@ public class LoginProcessor {
      */
     @Inject
     private VerifycodeQueryService verifycodeQueryService;
-
-    /**
-     * Timeline management service.
-     */
-    @Inject
-    private TimelineMgmtService timelineMgmtService;
 
     /**
      * Option query service.
@@ -415,6 +409,7 @@ public class LoginProcessor {
             final String userId = verifycode.optString(Verifycode.USER_ID);
             final JSONObject user = userQueryService.getUser(userId);
             dataModel.put(User.USER, user);
+            dataModel.put(Common.CODE, code);
         }
 
         dataModelService.fillHeaderAndFooter(request, response, dataModel);
@@ -437,6 +432,13 @@ public class LoginProcessor {
         final JSONObject requestJSONObject = Requests.parseRequestJSONObject(request, response);
         final String password = requestJSONObject.optString(User.USER_PASSWORD); // Hashed
         final String userId = requestJSONObject.optString(Common.USER_ID);
+        final String code = requestJSONObject.optString(Common.CODE);
+        final JSONObject verifycode = verifycodeQueryService.getVerifycode(code);
+        if (null == verifycode || !verifycode.optString(Verifycode.USER_ID).equals(userId)) {
+            context.renderMsg(langPropsService.get("verifycodeExpiredLabel"));
+
+            return;
+        }
 
         String name = null;
         String email = null;
@@ -450,9 +452,11 @@ public class LoginProcessor {
 
             user.put(User.USER_PASSWORD, password);
             userMgmtService.updatePassword(user);
+            verifycodeMgmtService.removeByCode(code);
             context.renderTrueResult();
-
             LOGGER.info("User [email=" + user.optString(User.USER_EMAIL) + "] reseted password");
+
+            Sessions.login(request, response, user, true);
         } catch (final ServiceException e) {
             final String msg = langPropsService.get("resetPwdLabel") + " - " + e.getMessage();
             LOGGER.log(Level.ERROR, msg + "[name={0}, email={1}]", name, email);
@@ -696,17 +700,6 @@ public class LoginProcessor {
             context.renderTrueResult();
 
             LOGGER.log(Level.INFO, "Registered a user [name={0}, email={1}]", name, email);
-
-            // Timeline
-            final JSONObject timeline = new JSONObject();
-            timeline.put(Common.USER_ID, user.optString(Keys.OBJECT_ID));
-            timeline.put(Common.TYPE, Common.NEW_USER);
-            String content = langPropsService.get("timelineNewUserLabel");
-            content = content.replace("{user}", "<a target='_blank' rel='nofollow' href='" + Latkes.getServePath()
-                    + "/member/" + name + "'>" + name + "</a>");
-            timeline.put(Common.CONTENT, content);
-
-            timelineMgmtService.addTimeline(timeline);
         } catch (final ServiceException e) {
             final String msg = langPropsService.get("registerFailLabel") + " - " + e.getMessage();
             LOGGER.log(Level.ERROR, msg + "[name={0}, email={1}]", name, email);

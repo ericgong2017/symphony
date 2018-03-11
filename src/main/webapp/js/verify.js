@@ -1,6 +1,6 @@
 /*
  * Symphony - A modern community (forum/SNS/blog) platform written in Java.
- * Copyright (C) 2012-2017,  b3log.org & hacpai.com
+ * Copyright (C) 2012-2018, b3log.org & hacpai.com
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
  *
  * @author <a href="http://vanessa.b3log.org">Liyuan Li</a>
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 2.7.3.11, Sep 13, 2017
+ * @version 2.8.0.0, Jan 7, 2018
  */
 
 /**
@@ -38,10 +38,6 @@ var Verify = {
                     "type": "string",
                     "max": 256,
                     "msg": Label.loginNameErrorLabel
-                }, {
-                    "target": $("#loginPassword"),
-                    "type": "password",
-                    "msg": Label.invalidPasswordLabel
                 }]})) {
             var requestJSONObject = {
                 nameOrEmail: $("#nameOrEmail").val().replace(/(^\s*)|(\s*$)/g, ""),
@@ -82,7 +78,7 @@ var Verify = {
         if (Validate.goValidate({target: $("#registerTip"),
             data: [{
                     "target": $("#registerUserName"),
-                    "msg": Label.userNameErrorLabel,
+                    "msg": Label.invalidUserNameLabel,
                     "type": 'string',
                     'max': 20
                 }, {
@@ -95,7 +91,7 @@ var Verify = {
                 userEmail: $("#registerUserEmail").val().replace(/(^\s*)|(\s*$)/g, ""),
                 invitecode: $("#registerInviteCode").val().replace(/(^\s*)|(\s*$)/g, ""),
                 captcha: $("#registerCaptcha").val(),
-                referral: $("#referral").val()
+                referral: sessionStorage.r || ''
             };
 
             $("#registerBtn").attr('disabled', 'disabled');
@@ -213,7 +209,8 @@ var Verify = {
                 }]})) {
             var requestJSONObject = {
                 userPassword: calcMD5($("#rpwdUserPassword").val()),
-                userId: $("#rpwdUserId").val()
+                userId: $("#rpwdUserId").val(),
+                code: $("#code").val()
             };
 
             $.ajax({
@@ -323,6 +320,9 @@ var Verify = {
                     $('.tag-desc').on( 'arrangeComplete', function () {
                         $('.step-btn .green, .step-btn .red').prop('disabled', false);
                     });
+                    if ($('.tag-desc li').length < 2) {
+                        $('.step-btn .green, .step-btn .red').prop('disabled', false);
+                    }
                     break;
                 case 3:
                     $('.guide-tab > div:eq(2)').show();

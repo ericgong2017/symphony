@@ -1,6 +1,6 @@
 /*
  * Symphony - A modern community (forum/SNS/blog) platform written in Java.
- * Copyright (C) 2012-2017,  b3log.org & hacpai.com
+ * Copyright (C) 2012-2018, b3log.org & hacpai.com
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,23 +60,26 @@ import java.util.Locale;
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
  * @author Bill Ho
- * @version 3.19.9.35, Aug 12, 2017
+ * @version 3.19.10.4, Feb 9, 2018
  * @since 0.2.0
  */
 public final class SymphonyServletListener extends AbstractServletListener {
 
     /**
+     * Logger.
+     */
+    private static final Logger LOGGER = Logger.getLogger(SymphonyServletListener.class);
+
+    /**
      * Symphony version.
      */
-    public static final String VERSION = "2.1.0";
+    public static final String VERSION = "2.4.0";
+
     /**
      * JSONO print indent factor.
      */
     public static final int JSON_PRINT_INDENT_FACTOR = 4;
-    /**
-     * Logger.
-     */
-    private static final Logger LOGGER = Logger.getLogger(SymphonyServletListener.class);
+
     /**
      * Bean manager.
      */
@@ -198,19 +201,21 @@ public final class SymphonyServletListener extends AbstractServletListener {
                 || StringUtils.containsIgnoreCase(userAgentStr, "MQQBrowser")
                 || StringUtils.containsIgnoreCase(userAgentStr, "iphone")
                 || StringUtils.containsIgnoreCase(userAgentStr, "MicroMessenger")
-                || StringUtils.containsIgnoreCase(userAgentStr, "CFNetwork")) {
+                || StringUtils.containsIgnoreCase(userAgentStr, "CFNetwork")
+                || StringUtils.containsIgnoreCase(userAgentStr, "Android")) {
             browserType = BrowserType.MOBILE_BROWSER;
         } else if (StringUtils.containsIgnoreCase(userAgentStr, "Iframely")
                 || StringUtils.containsIgnoreCase(userAgentStr, "Google")
-                || StringUtils.containsIgnoreCase(userAgentStr, "B3log")) {
+                || StringUtils.containsIgnoreCase(userAgentStr, "B3log")
+                || StringUtils.containsIgnoreCase(userAgentStr, "BUbiNG")
+                || StringUtils.containsIgnoreCase(userAgentStr, "ltx71")) {
             browserType = BrowserType.ROBOT;
         } else if (BrowserType.UNKNOWN == browserType) {
             if (!StringUtils.containsIgnoreCase(userAgentStr, "Java")
                     && !StringUtils.containsIgnoreCase(userAgentStr, "MetaURI")
                     && !StringUtils.containsIgnoreCase(userAgentStr, "Feed")) {
                 LOGGER.log(Level.WARN, "Unknown client [UA=" + userAgentStr + ", remoteAddr="
-                        + Requests.getRemoteAddr(httpServletRequest) + ", URI="
-                        + httpServletRequest.getRequestURI() + "]");
+                        + Requests.getRemoteAddr(httpServletRequest) + ", URI=" + httpServletRequest.getRequestURI() + "]");
             }
         }
 
@@ -249,8 +254,8 @@ public final class SymphonyServletListener extends AbstractServletListener {
             super.requestDestroyed(servletRequestEvent);
 
             final HttpServletRequest request = (HttpServletRequest) servletRequestEvent.getServletRequest();
-            final boolean isStatic = (Boolean) request.getAttribute(Keys.HttpRequest.IS_REQUEST_STATIC_RESOURCE);
-            if (!isStatic) {
+            final Object isStaticObj = request.getAttribute(Keys.HttpRequest.IS_REQUEST_STATIC_RESOURCE);
+            if (null != isStaticObj && !(Boolean) isStaticObj) {
                 Stopwatchs.end();
 
                 final long elapsed = Stopwatchs.getElapsed("Request initialized [" + request.getRequestURI() + "]");

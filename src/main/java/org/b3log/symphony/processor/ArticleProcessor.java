@@ -1,6 +1,6 @@
 /*
  * Symphony - A modern community (forum/SNS/blog) platform written in Java.
- * Copyright (C) 2012-2017,  b3log.org & hacpai.com
+ * Copyright (C) 2012-2018, b3log.org & hacpai.com
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,7 +55,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.safety.Whitelist;
 
 import javax.imageio.ImageIO;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -63,7 +62,6 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 import java.util.List;
 
@@ -92,7 +90,7 @@ import java.util.List;
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
  * @author <a href="http://zephyr.b3log.org">Zephyr</a>
- * @version 1.26.29.0, Sep 12, 2017
+ * @version 1.27.0.3, Feb 12, 2018
  * @since 0.2.0
  */
 @RequestProcessor
@@ -616,8 +614,10 @@ public class ArticleProcessor {
                 String.valueOf(ArticleAddValidation.MAX_ARTICLE_CONTENT_LENGTH));
         dataModel.put("articleContentErrorLabel", articleContentErrorLabel);
 
-        final String b3logKey = currentUser.optString(UserExt.USER_B3_KEY);
-        dataModel.put("hasB3Key", !Strings.isEmptyOrNull(b3logKey));
+        final String b3Key = currentUser.optString(UserExt.USER_B3_KEY);
+        final String b3ClientAddArticle = currentUser.optString(UserExt.USER_B3_CLIENT_ADD_ARTICLE_URL);
+        final String b3ClientUpdateArticle = currentUser.optString(UserExt.USER_B3_CLIENT_UPDATE_ARTICLE_URL);
+        dataModel.put("hasB3Key", StringUtils.isNotBlank(b3Key) && StringUtils.isNotBlank(b3ClientAddArticle) && StringUtils.isNotBlank(b3ClientUpdateArticle));
 
         fillPostArticleRequisite(dataModel, currentUser);
         fillDomainsWithTags(dataModel);
@@ -627,10 +627,10 @@ public class ArticleProcessor {
         boolean requisite = false;
         String requisiteMsg = "";
 
-        if (!UserExt.updatedAvatar(currentUser)) {
-            requisite = true;
-            requisiteMsg = langPropsService.get("uploadAvatarThenPostLabel");
-        }
+//        if (!UserExt.updatedAvatar(currentUser)) {
+//            requisite = true;
+//            requisiteMsg = langPropsService.get("uploadAvatarThenPostLabel");
+//        }
 
         dataModel.put(Common.REQUISITE, requisite);
         dataModel.put(Common.REQUISITE_MSG, requisiteMsg);
@@ -674,6 +674,7 @@ public class ArticleProcessor {
 
         final String authorId = article.optString(Article.ARTICLE_AUTHOR_ID);
         final JSONObject author = userQueryService.getUser(authorId);
+        Escapes.escapeHTML(author);
 
         if (Article.ARTICLE_ANONYMOUS_C_PUBLIC == article.optInt(Article.ARTICLE_ANONYMOUS)) {
             article.put(Article.ARTICLE_T_AUTHOR_NAME, author.optString(User.USER_NAME));
@@ -888,6 +889,10 @@ public class ArticleProcessor {
 
             articleMgmtService.genArticleAudio(article, uid);
         }
+
+        if (StringUtils.isNotBlank(Symphonys.get("ipfs.dir"))) {
+            articleMgmtService.saveMarkdown(article);
+        }
     }
 
     /**
@@ -908,21 +913,15 @@ public class ArticleProcessor {
      * </pre>
      * </p>
      *
-     * @param context  the specified context
-     * @param request  the specified request
-     * @param response the specified response
-     * @throws IOException      io exception
-     * @throws ServletException servlet exception
+     * @param context the specified context
+     * @param request the specified request
      */
     @RequestProcessing(value = "/article", method = HTTPRequestMethod.POST)
     @Before(adviceClass = {StopwatchStartAdvice.class, LoginCheck.class, CSRFCheck.class, ArticleAddValidation.class,
             PermissionCheck.class})
     @After(adviceClass = StopwatchEndAdvice.class)
-    public void addArticle(final HTTPRequestContext context, final HttpServletRequest request, final HttpServletResponse response)
-            throws IOException, ServletException {
+    public void addArticle(final HTTPRequestContext context, final HttpServletRequest request, final JSONObject requestJSONObject) {
         context.renderJSON();
-
-        final JSONObject requestJSONObject = (JSONObject) request.getAttribute(Keys.REQUEST);
 
         final String articleTitle = requestJSONObject.optString(Article.ARTICLE_TITLE);
         String articleTags = requestJSONObject.optString(Article.ARTICLE_TAGS);
@@ -977,7 +976,6 @@ public class ArticleProcessor {
             }
 
             article.put(Article.ARTICLE_TAGS, articleTags);
-            article.put(Article.ARTICLE_T_IS_BROADCAST, false);
 
             final String articleId = articleMgmtService.addArticle(article);
 
@@ -1196,13 +1194,11 @@ public class ArticleProcessor {
      * @param request  the specified http servlet request
      * @param response the specified http servlet response
      * @param context  the specified http request context
-     * @throws Exception exception
      */
     @RequestProcessing(value = "/markdown", method = HTTPRequestMethod.POST)
-    @Before(adviceClass = {StopwatchStartAdvice.class, LoginCheck.class})
+    @Before(adviceClass = StopwatchStartAdvice.class)
     @After(adviceClass = StopwatchEndAdvice.class)
-    public void markdown2HTML(final HttpServletRequest request, final HttpServletResponse response, final HTTPRequestContext context)
-            throws Exception {
+    public void markdown2HTML(final HttpServletRequest request, final HttpServletResponse response, final HTTPRequestContext context) {
         context.renderJSON(true);
         String markdownText = request.getParameter("markdownText");
         if (Strings.isEmptyOrNull(markdownText)) {
@@ -1303,8 +1299,7 @@ public class ArticleProcessor {
         markdownText = Markdowns.toHTML(markdownText);
         markdownText = Markdowns.clean(markdownText, "");
 
-        context.renderTrueResult().
-                renderJSONValue(Article.ARTICLE_REWARD_CONTENT, markdownText);
+        context.renderTrueResult().renderJSONValue(Article.ARTICLE_REWARD_CONTENT, markdownText);
     }
 
     /**

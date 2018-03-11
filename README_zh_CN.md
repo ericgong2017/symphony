@@ -69,12 +69,14 @@ Sym 的诞生是有如下几点原因：
 * [贵州IT](http://www.gzit.info)
 * [超级产品经理](https://imspm.com)
 * [蚂蚁程序猿](http://bbs.itmayiedu.com)
-* [漠游网](https://damoluomu.com)
-* [呆萌狮 - Demo's](http://www.daimengshi.com)
+* [北纬极客](https://begeek.bwae.org)
+* [胖虎社区](http://www.pwnhoo.com)
+* [架构师小秘圈](http://www.3xmq.com)
 
 商业版：
 
 * [黑客派](https://hacpai.com)
+* [爱就来](https://ajlai.com)
 * [四方环视](http://bbs.ivrpano.com)
 * [汇桔网](https://bbs.wtoip.com)
 * [TapDealing](http://www.tapdealing.com)
@@ -220,7 +222,7 @@ Sym 提供了 [API](https://hacpai.com/article/1457158841475) 进行帖子、回
 
 ![11](https://cloud.githubusercontent.com/assets/873584/19893293/b0014ba6-a083-11e6-9c9a-9debad14c826.png)
 
-* 通过配置即可集成 [Algolia](https://www.algolia.com/referrals/1faf0d17/join) 云搜索服务，可自定义搜索字段，并进行权重、排序调优
+* 通过配置即可集成 [Algolia](https://www.algolia.com) 云搜索服务，可自定义搜索字段，并进行权重、排序调优
 * 也可以自己搭建 Elasticsearch 并通过配置进行集成
 
 后续会对搜索功能进行加强，实现条件过滤，结果高亮等，敬请期待。
@@ -244,7 +246,7 @@ Sym 提供了 [API](https://hacpai.com/article/1457158841475) 进行帖子、回
 Sym 有两个版本：
 
 * 社区版：使用 GPL 开源，如果你选择使用社区版，则必须完全遵守 GPL 的相关条款
-* 商业版：闭源，报价 ¥28000，请联系 QQ 845765 或者微信号 DL88250 进行细节咨询
+* 商业版：闭源，报价 ¥20000，请联系 QQ 845765 或者微信号 DL88250 进行细节咨询
 
 **关于商业版和社区版的对比请看[这里](https://hacpai.com/article/1500543226433)，企业网站、经营性网站、以营利为目的或实现盈利的网站请购买商业版。**
 
@@ -260,7 +262,7 @@ Sym 的主要作者是 [Daniel](https://github.com/88250) 与 [Vanessa](https://
 
 * 到 Sym 官方[讨论区](https://hacpai.com/tag/Sym)发帖（推荐做法）
 * 来一发 [issue](https://github.com/b3log/symphony/issues/new)
-* 加入 Sym 开发支持 Q 群 17370164
+* 加入 Sym 开发支持 [Q 群 17370164](https://shang.qq.com/wpa/qunwpa?idkey=0bb80e452d38d5113c7bb2534cefc8155589d0bdce81c7d2e6d91930bcb6e2d7)
 
 ## 感悟
 
@@ -304,6 +306,14 @@ Sym 的诞生离不开以下开源项目：
 * [Latke](https://github.com/b3log/latke)：Java Web 框架 
 * [NetBeans](https://netbeans.org)：全宇宙暂时排名第三的 IDE
 * [IntelliJ IDEA](https://www.jetbrains.com/idea)：全宇宙暂时排名第二的 IDE
+
+安全方面特别感谢：
+
+* [米斯特安全团队](http://www.hi-ourlife.com)
+* [@gh0stkey](https://github.com/gh0stkey)
+* [@breezecoder](https://github.com/breezecoder)
+
+等专业人士给予的大力帮助！
 
 ----
 

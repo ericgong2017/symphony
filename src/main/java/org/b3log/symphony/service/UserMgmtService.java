@@ -1,6 +1,6 @@
 /*
  * Symphony - A modern community (forum/SNS/blog) platform written in Java.
- * Copyright (C) 2012-2017,  b3log.org & hacpai.com
+ * Copyright (C) 2012-2018, b3log.org & hacpai.com
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
  */
 package org.b3log.symphony.service;
 
+import com.qiniu.storage.Configuration;
 import com.qiniu.storage.UploadManager;
 import com.qiniu.util.Auth;
 import org.apache.commons.io.IOUtils;
@@ -39,10 +40,7 @@ import org.b3log.latke.util.Requests;
 import org.b3log.latke.util.Strings;
 import org.b3log.symphony.model.*;
 import org.b3log.symphony.repository.*;
-import org.b3log.symphony.util.Crypts;
-import org.b3log.symphony.util.Geos;
-import org.b3log.symphony.util.Sessions;
-import org.b3log.symphony.util.Symphonys;
+import org.b3log.symphony.util.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -61,7 +59,7 @@ import java.util.regex.Pattern;
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
  * @author Bill Ho
- * @version 1.15.21.1, Sep 4, 2017
+ * @version 1.15.21.4, Feb 12, 2018
  * @since 0.2.0
  */
 @Service
@@ -393,7 +391,7 @@ public class UserMgmtService {
      *                          "userName": "",
      *                          "userEmail": "",
      *                          "userPassword": "", // Hashed
-     *                          "userLanguage": "",
+     *                          "userLanguage": "", // optional, default to "zh_CN"
      *                          "userAppRole": int, // optional, default to 0
      *                          "userRole": "", // optional, uses {@value Role#ROLE_ID_C_DEFAULT} instead if not specified
      *                          "userStatus": int, // optional, uses {@value UserExt#USER_STATUS_C_NOT_VERIFIED} instead if not specified
@@ -527,6 +525,13 @@ public class UserMgmtService {
                         user.put(UserExt.USER_AVATAR_URL, avatarURL + "?" + new Date().getTime());
                     }
 
+                    avatarURL = user.optString(UserExt.USER_AVATAR_URL);
+                    if (255 < StringUtils.length(avatarURL)) {
+                        LOGGER.warn("Length of user [" + userName + "]'s avatar URL [" + avatarURL + "] larger then 255");
+                        avatarURL = Symphonys.get("defaultThumbnailURL");
+                        user.put(UserExt.USER_AVATAR_URL, avatarURL);
+                    }
+
                     userRepository.update(ret, user);
                 }
             } else {
@@ -534,26 +539,30 @@ public class UserMgmtService {
                 user.put(Keys.OBJECT_ID, ret);
 
                 try {
-                    final BufferedImage img = avatarQueryService.createAvatar(MD5.hash(ret), 512);
-                    final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    ImageIO.write(img, "jpg", baos);
-                    baos.flush();
-                    final byte[] bytes = baos.toByteArray();
-                    baos.close();
+                    byte[] avatarData;
+
+                    final String hash = MD5.hash(ret);
+                    avatarData = Gravatars.getRandomAvatarData(hash); // https://github.com/b3log/symphony/issues/569
+                    if (null == avatarData) {
+                        final BufferedImage img = avatarQueryService.createAvatar(hash, 512);
+                        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        ImageIO.write(img, "jpg", baos);
+                        baos.flush();
+                        avatarData = baos.toByteArray();
+                        baos.close();
+                    }
 
                     if (Symphonys.getBoolean("qiniu.enabled")) {
                         final Auth auth = Auth.create(Symphonys.get("qiniu.accessKey"), Symphonys.get("qiniu.secretKey"));
-                        final UploadManager uploadManager = new UploadManager();
+                        final UploadManager uploadManager = new UploadManager(new Configuration());
 
-                        uploadManager.put(bytes, "avatar/" + ret, auth.uploadToken(Symphonys.get("qiniu.bucket")),
+                        uploadManager.put(avatarData, "avatar/" + ret, auth.uploadToken(Symphonys.get("qiniu.bucket")),
                                 null, "image/jpeg", false);
-                        user.put(UserExt.USER_AVATAR_URL, Symphonys.get("qiniu.domain") + "/avatar/" + ret + "?"
-                                + new Date().getTime());
+                        user.put(UserExt.USER_AVATAR_URL, Symphonys.get("qiniu.domain") + "/avatar/" + ret + "?" + new Date().getTime());
                     } else {
                         final String fileName = UUID.randomUUID().toString().replaceAll("-", "") + ".jpg";
                         final OutputStream output = new FileOutputStream(Symphonys.get("upload.dir") + fileName);
-                        IOUtils.write(bytes, output);
-
+                        IOUtils.write(avatarData, output);
                         IOUtils.closeQuietly(output);
 
                         user.put(UserExt.USER_AVATAR_URL, Latkes.getServePath() + "/upload/" + fileName);
@@ -622,13 +631,9 @@ public class UserMgmtService {
                 final JSONObject u = new JSONObject();
                 u.put(User.USER_NAME, user.optString(User.USER_NAME));
                 u.put(UserExt.USER_T_NAME_LOWER_CASE, user.optString(User.USER_NAME).toLowerCase());
-
-                final String avatar = avatarQueryService.getAvatarURLByUser(UserExt.USER_AVATAR_VIEW_MODE_C_STATIC,
-                        user, "20");
+                final String avatar = avatarQueryService.getAvatarURLByUser(UserExt.USER_AVATAR_VIEW_MODE_C_STATIC, user, "20");
                 u.put(UserExt.USER_AVATAR_URL, avatar);
-
                 UserQueryService.USER_NAMES.add(u);
-
                 Collections.sort(UserQueryService.USER_NAMES, (u1, u2) -> {
                     final String u1Name = u1.optString(UserExt.USER_T_NAME_LOWER_CASE);
                     final String u2Name = u2.optString(UserExt.USER_T_NAME_LOWER_CASE);
@@ -795,7 +800,7 @@ public class UserMgmtService {
 
                 userRepository.update(id, user);
 
-                LOGGER.log(Level.INFO, "Reset unverified user [email=" + user.optString(User.USER_EMAIL));
+                LOGGER.log(Level.INFO, "Reset unverified user [email=" + user.optString(User.USER_EMAIL) + "]");
             }
         } catch (final RepositoryException e) {
             LOGGER.log(Level.ERROR, "Reset unverified users failed", e);

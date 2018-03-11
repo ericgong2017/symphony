@@ -27,8 +27,9 @@
                                           aria-label="${article.articleAuthorName}"
                                           style="background-image:url('${article.articleAuthorThumbnailURL20}')"></span>
                                     <#if "someone" != article.articleAuthorName></a></#if>
-                                <a rel="nofollow" class="title" href="${servePath}${article.articlePermalink}">${article.articleTitleEmoj}</a>
-                                <a class="fn-right count ft-gray ft-smaller" href="${servePath}${article.articlePermalink}">${article.articleViewCount}</a>
+                                <a rel="nofollow" class="title fn-ellipsis" href="${servePath}${article.articlePermalink}">${article.articleTitleEmoj}</a>
+                                <a class="fn-right count ft-gray ft-smaller" href="${servePath}${article.articlePermalink}"><#if article.articleViewCount < 1000>
+                                    ${article.articleViewCount}<#else>${article.articleViewCntDisplayFormat}</#if></a>
                             </li>
                             </#list>
                         </ul>
@@ -48,7 +49,7 @@
                                           aria-label="${article.articleAuthorName}"
                                           style="background-image:url('${article.articleAuthorThumbnailURL20}')"></span>
                                     <#if "someone" != article.articleAuthorName></a></#if>
-                                <a rel="nofollow" class="title" href="${servePath}${article.articlePermalink}">${article.articleTitleEmoj}</a>
+                                <a rel="nofollow" class="title fn-ellipsis" href="${servePath}${article.articlePermalink}">${article.articleTitleEmoj}</a>
                                 <a class="fn-right count ft-gray ft-smaller" href="${servePath}${article.articlePermalink}">${article.articleViewCount}</a>
                             </li>
                             </#list>
@@ -78,30 +79,6 @@
         <div class="fn-hr10"></div>
         <div class="main">
             <div class="wrapper">
-                <div class="module">
-                    <div class="module-header" style="background-color: #4e68ca">
-                        <a href="${servePath}/timeline">${timelineLabel}</a>
-                    </div>
-                    <div class="module-panel">
-                        <#if timelines?size <= 0>
-                            <ul class="module-list">
-                                <li>
-                                ${emptyTimelineLabel}
-                                </li>
-                            </ul>
-                        <#else>
-                            <ul class="module-list">
-                                <#list timelines as article>
-                                <#if article_index < 3>
-                                <li<#if !article_has_next> class="last"</#if>>
-                                    ${article.content}
-                                    </#if>
-                                </li>
-                                </#list>
-                            </ul>
-                        </#if>
-                    </div>
-                </div>
                 <#if ADLabel != ''>
                 <div class="module">
                     <div class="module-header" style="background-color: #7ea5c8">
@@ -137,6 +114,9 @@
         <a target="_blank"
            href="http://shang.qq.com/wpa/qunwpa?idkey=981d9282616274abb1752336e21b8036828f715a1c4d0628adcf208f2fd54f3a">
             <svg><use xlink:href="#qq"></use></svg></a>
+        <a target="_blank" rel="noopener"
+           href="https://t.me/b3log">
+            <svg><use xlink:href="#icon-telegram"></use></svg></a>
     </div>
     <#include "footer.ftl">
 </body>

@@ -1,6 +1,6 @@
 /*
  * Symphony - A modern community (forum/SNS/blog) platform written in Java.
- * Copyright (C) 2012-2017,  b3log.org & hacpai.com
+ * Copyright (C) 2012-2018, b3log.org & hacpai.com
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,8 +17,10 @@
  */
 package org.b3log.symphony.service;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.DateFormatUtils;
 import org.b3log.latke.Keys;
 import org.b3log.latke.event.Event;
 import org.b3log.latke.event.EventException;
@@ -34,6 +36,7 @@ import org.b3log.latke.service.LangPropsService;
 import org.b3log.latke.service.ServiceException;
 import org.b3log.latke.service.annotation.Service;
 import org.b3log.latke.util.Ids;
+import org.b3log.latke.util.Strings;
 import org.b3log.symphony.event.EventTypes;
 import org.b3log.symphony.model.*;
 import org.b3log.symphony.repository.*;
@@ -42,17 +45,27 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import org.yaml.snakeyaml.Yaml;
 
+import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Article management service.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
  * @author <a href="http://zephyr.b3log.org">Zephyr</a>
- * @version 2.17.36.45, Aug 30, 2017
+ * @version 2.18.2.0, Mar 5, 2018
  * @since 0.2.0
  */
 @Service
@@ -247,17 +260,17 @@ public class ArticleMgmtService {
         final int ups = article.optInt(Article.ARTICLE_GOOD_CNT);
         final int downs = article.optInt(Article.ARTICLE_BAD_CNT);
         if (watchCnt > 0 || collectCnt > 0 || ups > 0 || downs > 0) {
-            throw new ServiceException("removeArticleFoundWatchEtcLabel");
+            throw new ServiceException(langPropsService.get("removeArticleFoundWatchEtcLabel"));
         }
 
         final int rewardCnt = (int) rewardQueryService.rewardedCount(articleId, Reward.TYPE_C_ARTICLE);
         if (rewardCnt > 0) {
-            throw new ServiceException("removeArticleFoundRewardLabel");
+            throw new ServiceException(langPropsService.get("removeArticleFoundRewardLabel"));
         }
 
         final int thankCnt = (int) rewardQueryService.rewardedCount(articleId, Reward.TYPE_C_THANK_ARTICLE);
         if (thankCnt > 0) {
-            throw new ServiceException("removeArticleFoundThankLabel");
+            throw new ServiceException(langPropsService.get("removeArticleFoundThankLabel"));
         }
 
         // Perform removal
@@ -285,7 +298,12 @@ public class ArticleMgmtService {
         final String articleId = article.optString(Keys.OBJECT_ID);
         String previewContent = article.optString(Article.ARTICLE_CONTENT);
         previewContent = Markdowns.toHTML(previewContent);
-        previewContent = Emotions.clear(Jsoup.parse(previewContent).text());
+        final Document doc = Jsoup.parse(previewContent);
+        final Elements elements = doc.select("a, img, iframe, object, video");
+        for (final Element element : elements) {
+            element.remove();
+        }
+        previewContent = Emotions.clear(doc.text());
         previewContent = StringUtils.substring(previewContent, 0, 512);
         final String contentToTTS = previewContent;
 
@@ -409,33 +427,33 @@ public class ArticleMgmtService {
      * Increments the view count of the specified article by the given article id.
      *
      * @param articleId the given article id
-     * @throws ServiceException service exception
      */
-    public void incArticleViewCount(final String articleId) throws ServiceException {
-        Symphonys.EXECUTOR_SERVICE.submit(new Runnable() {
-            @Override
-            public void run() {
-                final Transaction transaction = articleRepository.beginTransaction();
-                try {
-                    final JSONObject article = articleRepository.get(articleId);
-                    if (null == article) {
-                        return;
-                    }
-
-                    final int viewCnt = article.optInt(Article.ARTICLE_VIEW_CNT);
-                    article.put(Article.ARTICLE_VIEW_CNT, viewCnt + 1);
-                    article.put(Article.ARTICLE_RANDOM_DOUBLE, Math.random());
-
-                    articleRepository.update(articleId, article);
-
-                    transaction.commit();
-                } catch (final RepositoryException e) {
+    public void incArticleViewCount(final String articleId) {
+        Symphonys.EXECUTOR_SERVICE.submit(() -> {
+            final Transaction transaction = articleRepository.beginTransaction();
+            try {
+                final JSONObject article = articleRepository.get(articleId);
+                if (null == article) {
                     if (transaction.isActive()) {
                         transaction.rollback();
                     }
 
-                    LOGGER.log(Level.ERROR, "Incs an article view count failed", e);
+                    return;
                 }
+
+                final int viewCnt = article.optInt(Article.ARTICLE_VIEW_CNT);
+                article.put(Article.ARTICLE_VIEW_CNT, viewCnt + 1);
+                article.put(Article.ARTICLE_RANDOM_DOUBLE, Math.random());
+
+                articleRepository.update(articleId, article);
+
+                transaction.commit();
+            } catch (final RepositoryException e) {
+                if (transaction.isActive()) {
+                    transaction.rollback();
+                }
+
+                LOGGER.log(Level.ERROR, "Incs an article view count failed", e);
             }
         });
     }
@@ -566,7 +584,6 @@ public class ArticleMgmtService {
 
             final String clientArticleId = requestJSONObject.optString(Article.ARTICLE_CLIENT_ARTICLE_ID, ret);
             final String clientArticlePermalink = requestJSONObject.optString(Article.ARTICLE_CLIENT_ARTICLE_PERMALINK);
-            final boolean isBroadcast = requestJSONObject.optBoolean(Article.ARTICLE_T_IS_BROADCAST);
 
             article.put(Article.ARTICLE_TITLE, articleTitle);
             article.put(Article.ARTICLE_TAGS, requestJSONObject.optString(Article.ARTICLE_TAGS));
@@ -578,7 +595,9 @@ public class ArticleMgmtService {
             articleContent = StringUtils.replace(articleContent, langPropsService.get("uploadingLabel", Locale.US), "");
             article.put(Article.ARTICLE_CONTENT, articleContent);
 
-            article.put(Article.ARTICLE_REWARD_CONTENT, requestJSONObject.optString(Article.ARTICLE_REWARD_CONTENT));
+            String rewardContent = requestJSONObject.optString(Article.ARTICLE_REWARD_CONTENT);
+            rewardContent = Emotions.toAliases(rewardContent);
+            article.put(Article.ARTICLE_REWARD_CONTENT, rewardContent);
 
             article.put(Article.ARTICLE_EDITOR_TYPE, requestJSONObject.optString(Article.ARTICLE_EDITOR_TYPE));
             article.put(Article.ARTICLE_SYNC_TO_CLIENT, fromClient ? true : author.optBoolean(UserExt.SYNC_TO_CLIENT));
@@ -595,11 +614,7 @@ public class ArticleMgmtService {
             article.put(Article.ARTICLE_LATEST_CMT_TIME, 0);
             article.put(Article.ARTICLE_LATEST_CMTER_NAME, "");
             article.put(Article.ARTICLE_PERMALINK, "/article/" + ret);
-            if (isBroadcast) {
-                article.put(Article.ARTICLE_CLIENT_ARTICLE_ID, "aBroadcast");
-            } else {
-                article.put(Article.ARTICLE_CLIENT_ARTICLE_ID, clientArticleId);
-            }
+            article.put(Article.ARTICLE_CLIENT_ARTICLE_ID, clientArticleId);
             article.put(Article.ARTICLE_CLIENT_ARTICLE_PERMALINK, clientArticlePermalink);
             article.put(Article.ARTICLE_RANDOM_DOUBLE, Math.random());
             article.put(Article.REDDIT_SCORE, 0);
@@ -889,7 +904,9 @@ public class ArticleMgmtService {
                     enableReward = true;
                 }
 
-                oldArticle.put(Article.ARTICLE_REWARD_CONTENT, requestJSONObject.optString(Article.ARTICLE_REWARD_CONTENT));
+                String rewardContent = requestJSONObject.optString(Article.ARTICLE_REWARD_CONTENT);
+                rewardContent = Emotions.toAliases(rewardContent);
+                oldArticle.put(Article.ARTICLE_REWARD_CONTENT, rewardContent);
                 oldArticle.put(Article.ARTICLE_REWARD_POINT, rewardPoint);
             }
 
@@ -1839,6 +1856,67 @@ public class ArticleMgmtService {
 
             LOGGER.log(Level.ERROR, "Admin adds an article failed", e);
             throw new ServiceException(e.getMessage());
+        }
+    }
+
+    /**
+     * Saves markdown file for the specified article.
+     *
+     * @param article the specified article
+     */
+    public void saveMarkdown(final JSONObject article) {
+        if (Article.ARTICLE_TYPE_C_THOUGHT == article.optInt(Article.ARTICLE_TYPE)
+                || Article.ARTICLE_TYPE_C_DISCUSSION == article.optInt(Article.ARTICLE_TYPE)
+                || Article.ARTICLE_TYPE_C_BOOK == article.optInt(Article.ARTICLE_TYPE)) {
+            return;
+        }
+
+        final String dir = Symphonys.get("ipfs.dir");
+        if (StringUtils.isBlank(dir)) {
+            return;
+        }
+
+        final Path dirPath = Paths.get(dir);
+        try {
+            FileUtils.forceMkdir(dirPath.toFile());
+        } catch (final Exception e) {
+            LOGGER.log(Level.ERROR, "Creates dir [" + dirPath.toString() + "] for save markdown files failed", e);
+
+            return;
+        }
+
+        final String id = article.optString(Keys.OBJECT_ID);
+        final String authorName = article.optJSONObject(Article.ARTICLE_T_AUTHOR).optString(User.USER_NAME);
+        final Path mdPath = Paths.get(dir, "hacpai", authorName, id + ".md");
+        try {
+            if (mdPath.toFile().exists()) {
+                final FileTime lastModifiedTime = Files.getLastModifiedTime(mdPath);
+                if (lastModifiedTime.toMillis() + 1000 * 60 * 60 >= System.currentTimeMillis()) {
+                    return;
+                }
+            }
+        } catch (final Exception e) {
+            LOGGER.log(Level.ERROR, "Gets last modified time of file [" + mdPath.toString() + "] failed", e);
+
+            return;
+        }
+
+        try {
+            final Map<String, Object> hexoFront = new LinkedHashMap<>();
+            hexoFront.put("title", article.optString(Article.ARTICLE_TITLE));
+            hexoFront.put("date", DateFormatUtils.format((Date) article.opt(Article.ARTICLE_CREATE_TIME), "yyyy-MM-dd HH:mm:ss"));
+            hexoFront.put("updated", DateFormatUtils.format((Date) article.opt(Article.ARTICLE_UPDATE_TIME), "yyyy-MM-dd HH:mm:ss"));
+            final List<String> tags = Arrays.stream(article.optString(Article.ARTICLE_TAGS).split(",")).
+                    filter(StringUtils::isNotBlank).map(String::trim).collect(Collectors.toList());
+            if (tags.isEmpty()) {
+                tags.add("Sym");
+            }
+            hexoFront.put("tags", tags);
+
+            final String text = new Yaml().dump(hexoFront).replaceAll("\n", Strings.LINE_SEPARATOR) + "---" + Strings.LINE_SEPARATOR + article.optString(Article.ARTICLE_T_ORIGINAL_CONTENT);
+            FileUtils.writeStringToFile(new File(mdPath.toString()), text, "UTF-8");
+        } catch (final Exception e) {
+            LOGGER.log(Level.ERROR, "Writes article to markdown file [" + mdPath.toString() + "] failed", e);
         }
     }
 }

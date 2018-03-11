@@ -1,6 +1,6 @@
 /*
  * Symphony - A modern community (forum/SNS/blog) platform written in Java.
- * Copyright (C) 2012-2017,  b3log.org & hacpai.com
+ * Copyright (C) 2012-2018, b3log.org & hacpai.com
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ import java.util.Set;
  * Captcha processor.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 2.2.0.7, Jan 10, 2017
+ * @version 2.2.0.9, Feb 13, 2018
  * @since 0.2.2
  */
 @RequestProcessor
@@ -70,6 +70,11 @@ public class CaptchaProcessor {
     public static final Set<String> CAPTCHAS = new HashSet<>();
 
     /**
+     * Captcha length.
+     */
+    private static final int CAPTCHA_LENGTH = 4;
+
+    /**
      * Gets captcha.
      *
      * @param context the specified context
@@ -80,15 +85,13 @@ public class CaptchaProcessor {
         context.setRenderer(renderer);
 
         try {
-            final HttpServletRequest request = context.getRequest();
-            final HttpServletResponse response = context.getResponse();
-
             final ConfigurableCaptchaService cs = new ConfigurableCaptchaService();
             cs.setColorFactory(new SingleColorFactory(new Color(25, 60, 170)));
             cs.setFilterFactory(new CurvesRippleFilterFactory(cs.getColorFactory()));
             final RandomWordFactory randomWordFactory = new RandomWordFactory();
-            randomWordFactory.setMinLength(4);
-            randomWordFactory.setMaxLength(4);
+            randomWordFactory.setCharacters("abcdefghijklmnprstuvwxy23456789");
+            randomWordFactory.setMinLength(CAPTCHA_LENGTH);
+            randomWordFactory.setMaxLength(CAPTCHA_LENGTH);
             cs.setWordFactory(randomWordFactory);
             final Captcha captcha = cs.getCaptcha();
             final String challenge = captcha.getChallenge();
@@ -100,6 +103,7 @@ public class CaptchaProcessor {
 
             CAPTCHAS.add(challenge);
 
+            final HttpServletResponse response = context.getResponse();
             response.setHeader("Pragma", "no-cache");
             response.setHeader("Cache-Control", "no-cache");
             response.setDateHeader("Expires", 0);
@@ -150,8 +154,9 @@ public class CaptchaProcessor {
             cs.setColorFactory(new SingleColorFactory(new Color(26, 52, 96)));
             cs.setFilterFactory(new CurvesRippleFilterFactory(cs.getColorFactory()));
             final RandomWordFactory randomWordFactory = new RandomWordFactory();
-            randomWordFactory.setMinLength(4);
-            randomWordFactory.setMaxLength(4);
+            randomWordFactory.setCharacters("abcdefghijklmnprstuvwxy23456789");
+            randomWordFactory.setMinLength(CAPTCHA_LENGTH);
+            randomWordFactory.setMaxLength(CAPTCHA_LENGTH);
             cs.setWordFactory(randomWordFactory);
             final Captcha captcha = cs.getCaptcha();
             final String challenge = captcha.getChallenge();

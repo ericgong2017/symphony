@@ -1,6 +1,6 @@
 /*
  * Symphony - A modern community (forum/SNS/blog) platform written in Java.
- * Copyright (C) 2012-2017,  b3log.org & hacpai.com
+ * Copyright (C) 2012-2018, b3log.org & hacpai.com
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,6 @@
 package org.b3log.symphony.event;
 
 import org.b3log.latke.Keys;
-import org.b3log.latke.Latkes;
 import org.b3log.latke.event.AbstractEventListener;
 import org.b3log.latke.event.Event;
 import org.b3log.latke.event.EventException;
@@ -30,16 +29,12 @@ import org.b3log.latke.logging.Logger;
 import org.b3log.latke.model.User;
 import org.b3log.latke.service.LangPropsService;
 import org.b3log.symphony.model.Article;
-import org.b3log.symphony.model.Common;
 import org.b3log.symphony.model.Notification;
 import org.b3log.symphony.model.UserExt;
 import org.b3log.symphony.service.FollowQueryService;
 import org.b3log.symphony.service.NotificationMgmtService;
-import org.b3log.symphony.service.TimelineMgmtService;
 import org.b3log.symphony.service.UserQueryService;
-import org.b3log.symphony.util.Emotions;
 import org.json.JSONObject;
-import org.jsoup.Jsoup;
 
 import java.util.List;
 import java.util.Set;
@@ -48,7 +43,7 @@ import java.util.Set;
  * Sends article update related notifications.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.0.0.1, Jan 20, 2017
+ * @version 1.0.0.3, Jan 30, 2018
  * @since 2.0.0
  */
 @Named
@@ -83,12 +78,6 @@ public class ArticleUpdateNotifier extends AbstractEventListener<JSONObject> {
      */
     @Inject
     private LangPropsService langPropsService;
-
-    /**
-     * Timeline management service.
-     */
-    @Inject
-    private TimelineMgmtService timelineMgmtService;
 
     @Override
     public void action(final Event<JSONObject> event) throws EventException {
@@ -130,28 +119,6 @@ public class ArticleUpdateNotifier extends AbstractEventListener<JSONObject> {
 
                 notificationMgmtService.addFollowingArticleUpdateNotification(requestJSONObject);
             }
-
-            // Timeline
-            final String articleTitle = Jsoup.parse(originalArticle.optString(Article.ARTICLE_TITLE)).text();
-            final String articlePermalink = Latkes.getServePath() + originalArticle.optString(Article.ARTICLE_PERMALINK);
-
-            final JSONObject timeline = new JSONObject();
-            timeline.put(Common.USER_ID, articleAuthorId);
-            timeline.put(Common.TYPE, Article.ARTICLE);
-            String content = langPropsService.get("timelineArticleUpdateLabel");
-
-            if (Article.ARTICLE_ANONYMOUS_C_PUBLIC == originalArticle.optInt(Article.ARTICLE_ANONYMOUS)) {
-                content = content.replace("{user}", "<a target='_blank' rel='nofollow' href='" + Latkes.getServePath()
-                        + "/member/" + articleAuthorName + "'>" + articleAuthorName + "</a>");
-            } else {
-                content = content.replace("{user}", UserExt.ANONYMOUS_USER_NAME);
-            }
-            content = content.replace("{article}", "<a target='_blank' rel='nofollow' href='" + articlePermalink
-                    + "'>" + articleTitle + "</a>");
-            content = Emotions.convert(content);
-            timeline.put(Common.CONTENT, content);
-
-            timelineMgmtService.addTimeline(timeline);
         } catch (final Exception e) {
             LOGGER.log(Level.ERROR, "Sends the article update notification failed", e);
         }

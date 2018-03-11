@@ -1,6 +1,6 @@
 /*
  * Symphony - A modern community (forum/SNS/blog) platform written in Java.
- * Copyright (C) 2012-2017,  b3log.org & hacpai.com
+ * Copyright (C) 2012-2018, b3log.org & hacpai.com
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,6 +48,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.parser.Parser;
 import org.jsoup.safety.Whitelist;
 import org.jsoup.select.Elements;
+import org.owasp.encoder.Encode;
 
 import javax.servlet.http.HttpServletRequest;
 import java.text.DecimalFormat;
@@ -58,7 +59,7 @@ import java.util.*;
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
  * @author <a href="http://vanessa.b3log.org">Liyuan Li</a>
- * @version 2.27.32.63, Oct 2, 2017
+ * @version 2.27.36.2, Mar 3, 2018
  * @since 0.2.0
  */
 @Service
@@ -306,7 +307,7 @@ public class ArticleQueryService {
                 return null;
             }
 
-            String title = ret.optString(Article.ARTICLE_TITLE);
+            final String title = Encode.forHtml(ret.optString(Article.ARTICLE_TITLE));
             ret.put(Article.ARTICLE_T_TITLE_EMOJI, Emotions.convert(title));
             ret.put(Article.ARTICLE_T_TITLE_EMOJI_UNICODE, EmojiParser.parseToUnicode(title));
 
@@ -354,7 +355,7 @@ public class ArticleQueryService {
                 return null;
             }
 
-            String title = ret.optString(Article.ARTICLE_TITLE);
+            final String title = Encode.forHtml(ret.optString(Article.ARTICLE_TITLE));
             ret.put(Article.ARTICLE_T_TITLE_EMOJI, Emotions.convert(title));
             ret.put(Article.ARTICLE_T_TITLE_EMOJI_UNICODE, EmojiParser.parseToUnicode(title));
 
@@ -622,7 +623,10 @@ public class ArticleQueryService {
 
                 articleIds.remove(article.optString(Keys.OBJECT_ID));
 
-                final Query query = new Query().setFilter(new PropertyFilter(Keys.OBJECT_ID, FilterOperator.IN, articleIds));
+                final Query query = new Query().setFilter(new PropertyFilter(Keys.OBJECT_ID, FilterOperator.IN, articleIds)).
+                        addProjection(Article.ARTICLE_TITLE, String.class).
+                        addProjection(Article.ARTICLE_PERMALINK, String.class).
+                        addProjection(Article.ARTICLE_AUTHOR_ID, String.class);
                 result = articleRepository.get(query);
 
                 ret.addAll(CollectionUtils.jsonArrayToList(result.optJSONArray(Keys.RESULTS)));
@@ -1224,7 +1228,10 @@ public class ArticleQueryService {
             filters.add(new PropertyFilter(Article.ARTICLE_TYPE, FilterOperator.NOT_EQUAL, Article.ARTICLE_TYPE_C_DISCUSSION));
             filters.add(new PropertyFilter(Article.ARTICLE_TAGS, FilterOperator.NOT_EQUAL, Tag.TAG_TITLE_C_SANDBOX));
 
-            query.setFilter(new CompositeFilter(CompositeFilterOperator.AND, filters));
+            query.setFilter(new CompositeFilter(CompositeFilterOperator.AND, filters)).
+                    addProjection(Article.ARTICLE_TITLE, String.class).
+                    addProjection(Article.ARTICLE_PERMALINK, String.class).
+                    addProjection(Article.ARTICLE_AUTHOR_ID, String.class);
 
             final JSONObject result = articleRepository.get(query);
             final List<JSONObject> ret = CollectionUtils.jsonArrayToList(result.optJSONArray(Keys.RESULTS));
@@ -1278,8 +1285,8 @@ public class ArticleQueryService {
         final List<Filter> filters = new ArrayList<>();
         filters.add(new PropertyFilter(Article.ARTICLE_STATUS, FilterOperator.EQUAL, Article.ARTICLE_STATUS_C_VALID));
         filters.add(new PropertyFilter(Article.ARTICLE_TYPE, FilterOperator.NOT_EQUAL, Article.ARTICLE_TYPE_C_DISCUSSION));
+        filters.add(new PropertyFilter(Article.ARTICLE_TAGS, FilterOperator.NOT_EQUAL, Tag.TAG_TITLE_C_SANDBOX));
         filters.add(new PropertyFilter(Article.ARTICLE_TAGS, FilterOperator.NOT_LIKE, "B3log%"));
-        filters.add(new PropertyFilter(Article.ARTICLE_TAGS, FilterOperator.NOT_LIKE, Tag.TAG_TITLE_C_SANDBOX + "%"));
         return new CompositeFilter(CompositeFilterOperator.AND, filters);
     }
 
@@ -1577,6 +1584,7 @@ public class ArticleQueryService {
         try {
             List<JSONObject> ret;
             Stopwatchs.start("Query index recent articles");
+            final long thirtyDaysAgo = DateUtils.addDays(new Date(), -30).getTime();
             try {
                 ret = articleRepository.select("SELECT\n"
                         + "	oId,\n"
@@ -1605,7 +1613,7 @@ public class ArticleQueryService {
                         + "END AS flag\n"
                         + "FROM\n"
                         + "	`" + articleRepository.getName() + "`\n"
-                        + " WHERE `articleType` != 1 AND `articleStatus` = 0 AND `articleTags` != '" + Tag.TAG_TITLE_C_SANDBOX + "'\n"
+                        + " WHERE `articleType` != 1 AND `articleStatus` = 0 AND `articleTags` != '" + Tag.TAG_TITLE_C_SANDBOX + "' AND `oId` >= '" + thirtyDaysAgo + "'\n"
                         + " ORDER BY\n"
                         + "	articleStick DESC,\n"
                         + "	flag DESC\n"
@@ -1989,7 +1997,7 @@ public class ArticleQueryService {
     /**
      * Organizes the specified article.
      * <ul>
-     * <li>converts create/update/latest comment time (long) to date type</li>
+     * <li>converts create/update/latest comment time (long) to date type and format string</li>
      * <li>generates author thumbnail URL</li>
      * <li>generates author name</li>
      * <li>escapes article title &lt; and &gt;</li>
@@ -2010,6 +2018,7 @@ public class ArticleQueryService {
      * @throws RepositoryException repository exception
      */
     public void organizeArticle(final int avatarViewMode, final JSONObject article) throws RepositoryException {
+        article.put(Article.ARTICLE_T_ORIGINAL_CONTENT, article.optString(Article.ARTICLE_CONTENT));
         toArticleDate(article);
         genArticleAuthor(avatarViewMode, article);
 
@@ -2024,8 +2033,7 @@ public class ArticleQueryService {
 
         qiniuImgProcessing(article);
 
-        String title = article.optString(Article.ARTICLE_TITLE).replace("<", "&lt;").replace(">", "&gt;");
-        title = Markdowns.clean(title, "");
+        final String title = Encode.forHtml(article.optString(Article.ARTICLE_TITLE));
         article.put(Article.ARTICLE_TITLE, title);
 
         article.put(Article.ARTICLE_T_TITLE_EMOJI, Emotions.convert(title));
@@ -2125,6 +2133,7 @@ public class ArticleQueryService {
         if (qiniuEnabled) {
             final String qiniuDomain = Symphonys.get("qiniu.domain");
             if (StringUtils.startsWith(ret, qiniuDomain)) {
+                ret = StringUtils.substringBefore(ret, "?");
                 ret += "?imageView2/1/w/" + 180 + "/h/" + 135 + "/format/jpg/interlace/1/q";
             } else {
                 ret = "";
@@ -2180,19 +2189,22 @@ public class ArticleQueryService {
     }
 
     /**
-     * Converts the specified article create/update/latest comment time (long) to date type.
+     * Converts the specified article create/update/latest comment time (long) to date type and format str.
      *
      * @param article the specified article
      */
     private void toArticleDate(final JSONObject article) {
-        article.put(Common.TIME_AGO,
-                Times.getTimeAgo(article.optLong(Article.ARTICLE_CREATE_TIME), Locales.getLocale()));
-        article.put(Common.CMT_TIME_AGO,
-                Times.getTimeAgo(article.optLong(Article.ARTICLE_LATEST_CMT_TIME), Locales.getLocale()));
-
-        article.put(Article.ARTICLE_CREATE_TIME, new Date(article.optLong(Article.ARTICLE_CREATE_TIME)));
-        article.put(Article.ARTICLE_UPDATE_TIME, new Date(article.optLong(Article.ARTICLE_UPDATE_TIME)));
-        article.put(Article.ARTICLE_LATEST_CMT_TIME, new Date(article.optLong(Article.ARTICLE_LATEST_CMT_TIME)));
+        article.put(Common.TIME_AGO, Times.getTimeAgo(article.optLong(Article.ARTICLE_CREATE_TIME), Locales.getLocale()));
+        article.put(Common.CMT_TIME_AGO, Times.getTimeAgo(article.optLong(Article.ARTICLE_LATEST_CMT_TIME), Locales.getLocale()));
+        final Date createDate = new Date(article.optLong(Article.ARTICLE_CREATE_TIME));
+        article.put(Article.ARTICLE_CREATE_TIME, createDate);
+        article.put(Article.ARTICLE_CREATE_TIME_STR, DateFormatUtils.format(createDate, "yyyy-MM-dd HH:mm:ss"));
+        final Date updateDate = new Date(article.optLong(Article.ARTICLE_UPDATE_TIME));
+        article.put(Article.ARTICLE_UPDATE_TIME, updateDate);
+        article.put(Article.ARTICLE_UPDATE_TIME_STR, DateFormatUtils.format(updateDate, "yyyy-MM-dd HH:mm:ss"));
+        final Date latestCmtDate = new Date(article.optLong(Article.ARTICLE_LATEST_CMT_TIME));
+        article.put(Article.ARTICLE_LATEST_CMT_TIME, latestCmtDate);
+        article.put(Article.ARTICLE_LATEST_CMT_TIME_STR, DateFormatUtils.format(latestCmtDate, "yyyy-MM-dd HH:mm:ss"));
     }
 
     /**

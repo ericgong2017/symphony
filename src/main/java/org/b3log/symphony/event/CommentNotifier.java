@@ -1,6 +1,6 @@
 /*
  * Symphony - A modern community (forum/SNS/blog) platform written in Java.
- * Copyright (C) 2012-2017,  b3log.org & hacpai.com
+ * Copyright (C) 2012-2018, b3log.org & hacpai.com
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
 package org.b3log.symphony.event;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.DateFormatUtils;
 import org.b3log.latke.Keys;
-import org.b3log.latke.Latkes;
 import org.b3log.latke.event.AbstractEventListener;
 import org.b3log.latke.event.Event;
 import org.b3log.latke.event.EventException;
@@ -41,8 +41,6 @@ import org.b3log.symphony.repository.UserRepository;
 import org.b3log.symphony.service.*;
 import org.b3log.symphony.util.*;
 import org.json.JSONObject;
-import org.jsoup.Jsoup;
-import org.jsoup.safety.Whitelist;
 
 import java.util.HashSet;
 import java.util.List;
@@ -52,7 +50,7 @@ import java.util.Set;
  * Sends a comment notification.
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 1.7.12.0, Sep 25, 2017
+ * @version 1.7.12.2, Jan 30, 2018
  * @since 0.2.0
  */
 @Named
@@ -111,12 +109,6 @@ public class CommentNotifier extends AbstractEventListener<JSONObject> {
      */
     @Inject
     private LangPropsService langPropsService;
-
-    /**
-     * Timeline management service.
-     */
-    @Inject
-    private TimelineMgmtService timelineMgmtService;
 
     /**
      * Pointtransfer management service.
@@ -221,6 +213,7 @@ public class CommentNotifier extends AbstractEventListener<JSONObject> {
 
             chData.put(Common.THUMBNAIL_UPDATE_TIME, commenter.optLong(UserExt.USER_UPDATE_TIME));
             chData.put(Common.TIME_AGO, langPropsService.get("justNowLabel"));
+            chData.put(Comment.COMMENT_CREATE_TIME_STR, DateFormatUtils.format(chData.optLong(Comment.COMMENT_CREATE_TIME), "yyyy-MM-dd HH:mm:ss"));
             String thankTemplate = langPropsService.get("thankConfirmLabel");
             thankTemplate = thankTemplate.replace("{point}", String.valueOf(Symphonys.getInt("pointThankComment")))
                     .replace("{user}", commenterName);
@@ -263,46 +256,6 @@ public class CommentNotifier extends AbstractEventListener<JSONObject> {
             ArticleChannel.notifyHeat(articleHeat);
 
             final boolean isDiscussion = originalArticle.optInt(Article.ARTICLE_TYPE) == Article.ARTICLE_TYPE_C_DISCUSSION;
-
-            // Timeline
-            if (!isDiscussion
-                    && Comment.COMMENT_ANONYMOUS_C_PUBLIC == originalComment.optInt(Comment.COMMENT_ANONYMOUS)) {
-                String articleTitle = Jsoup.parse(originalArticle.optString(Article.ARTICLE_TITLE)).text();
-                articleTitle = Emotions.convert(articleTitle);
-                final String articlePermalink = Latkes.getServePath() + originalArticle.optString(Article.ARTICLE_PERMALINK);
-
-                final JSONObject timeline = new JSONObject();
-                timeline.put(Common.USER_ID, commenterId);
-                timeline.put(Common.TYPE, Comment.COMMENT);
-                String content = langPropsService.get("timelineCommentLabel");
-
-                if (fromClient) {
-                    // "<i class='ft-small'>by 88250</i>"
-                    String syncCommenterName = StringUtils.substringAfter(cc, "<i class=\"ft-small\">by ");
-                    syncCommenterName = StringUtils.substringBefore(syncCommenterName, "</i>");
-
-                    if (UserRegisterValidation.invalidUserName(syncCommenterName)) {
-                        syncCommenterName = UserExt.ANONYMOUS_USER_NAME;
-                    }
-
-                    content = content.replace("{user}", syncCommenterName);
-                } else {
-                    content = content.replace("{user}", "<a target='_blank' rel='nofollow' href='" + Latkes.getServePath()
-                            + "/member/" + commenterName + "'>" + commenterName + "</a>");
-                }
-
-                content = content.replace("{article}", "<a target='_blank' rel='nofollow' href='" + articlePermalink
-                        + "'>" + articleTitle + "</a>")
-                        .replace("{comment}", cc.replaceAll("<p>", "").replaceAll("</p>", ""));
-
-                content = Jsoup.clean(content, Whitelist.none().addAttributes("a", "href", "rel", "target"));
-                timeline.put(Common.CONTENT, content);
-
-                if (StringUtils.isNotBlank(content)) {
-                    timelineMgmtService.addTimeline(timeline);
-                }
-            }
-
             final String articleAuthorId = originalArticle.optString(Article.ARTICLE_AUTHOR_ID);
             final boolean commenterIsArticleAuthor = articleAuthorId.equals(commenterId);
 

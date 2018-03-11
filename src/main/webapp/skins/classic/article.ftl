@@ -11,9 +11,8 @@
         <meta name="robots" content="NOINDEX,NOFOLLOW" />
         </#if>
         </@head>
-        <link rel="stylesheet" href="${staticServePath}/js/lib/highlight.js-9.6.0/styles/github.css">
+        <link rel="stylesheet" href="${staticServePath}/js/lib/compress/article.min.css?${staticResourceVersion}">
         <link rel="stylesheet" href="${staticServePath}/css/index.css?${staticResourceVersion}" />
-        <link rel="stylesheet" href="${staticServePath}/js/lib/editor/codemirror.min.css?${staticResourceVersion}">
         <link rel="canonical" href="${servePath}${article.articlePermalink}?p=${paginationCurrentPageNum}&m=${userCommentViewMode}">
         <#if articlePrevious??>
             <link rel="prev" title="${articlePrevious.articleTitleEmojUnicode}" href="${servePath}${articlePrevious.articlePermalink}">
@@ -34,6 +33,7 @@
         <meta name="twitter:description" content="${article.articlePreviewContent}" />
         <meta name="twitter:title" content="${article.articleTitle} - ${symphonyLabel}" />
         <meta name="twitter:image" content="${article.articleAuthorThumbnailURL210}" />
+        <meta name="twitter:url" content="${servePath}${article.articlePermalink}" />
         <meta name="twitter:site" content="@DL88250" />
         <meta name="twitter:creator" content="@DL88250" />
     </head>
@@ -80,7 +80,7 @@
                                 &nbsp;•&nbsp;
                                 ${article.timeAgo}
                                 <#if article.clientArticlePermalink?? && 0 < article.clientArticlePermalink?length>
-                                &nbsp;•&nbsp; <a href="${article.clientArticlePermalink}" target="_blank" rel="nofollow"><span class="ft-green">${sourceLabel}</span></a>
+                                &nbsp;•&nbsp; <a href="${servePath}/forward?goto=${article.clientArticlePermalink}" target="_blank" rel="nofollow"><span class="ft-green">${sourceLabel}</span></a>
                                 </#if>
                                 <#if "" != article.articleCity>
                                 &nbsp;•&nbsp; <a href="${servePath}/city/${article.articleCity}" target="_blank" rel="nofollow"><span class="ft-green">${article.articleCity}</span></a>
@@ -418,9 +418,8 @@
         </#if>
 
         <#if discussionViewable>
-        <span class="tooltipped tooltipped-w radio-btn" onclick="Comment._toggleReply()"
-              data-hasPermission="${permissions['commonAddComment'].permissionGrant?c}"
-              aria-label="${cmtLabel}"><svg class="icon-reply"><use xlink:href="#reply"></use></svg></span>
+        <span class="radio-btn" onclick="Comment._toggleReply()"
+              data-hasPermission="${permissions['commonAddComment'].permissionGrant?c}">${cmtLabel}</span>
         </#if>
 
         <#if isLoggedIn && discussionViewable && article.articleCommentable>
