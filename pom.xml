@@ -27,6 +27,7 @@
         <jetty.version>9.4.14.v20181114</jetty.version>
         <slf4j.version>1.7.24</slf4j.version>
         <mysql-connector-java.version>8.0.12</mysql-connector-java.version>
+        <h2-connector-java.version>1.4.198</h2-connector-java.version>
         <jsoup.version>1.10.2</jsoup.version>
         <flexmark.version>0.40.20</flexmark.version>
         <qiniu.version>7.2.11</qiniu.version>
@@ -176,12 +177,24 @@
             <artifactId>latke-repository-mysql</artifactId>
             <version>${latke.version}</version>
         </dependency>
+        
+        <dependency>
+            <groupId>org.b3log</groupId>
+            <artifactId>latke-repository-h2</artifactId>
+            <version>${latke.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>${mysql-connector-java.version}</version>
         </dependency>
+        
+        <dependency>
+	        <groupId>com.h2database</groupId>
+	        <artifactId>h2</artifactId>
+	        <version>${h2-connector-java.version}</version>
+   		 </dependency>
 
         <dependency>
             <groupId>org.testng</groupId>
